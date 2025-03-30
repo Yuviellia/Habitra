@@ -3,28 +3,19 @@
 namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity()
- * @ORM\Table(name="marked")
- */
+#[ORM\Entity]
+#[ORM\Table(name: "marked")]
 class Marked {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: "AUTO")]
+    #[ORM\Column(type: "integer")]
     private $id;
 
-    /**
-     * Many Marked entries belong to One Tag.
-     * @ORM\ManyToOne(targetEntity="App\Entity\Tag")
-     * @ORM\JoinColumn(name="idtag", referencedColumnName="id", nullable=false, onDelete="CASCADE")
-     */
+    #[ORM\ManyToOne(targetEntity: "App\Entity\Tag")]
+    #[ORM\JoinColumn(name: "idtag", referencedColumnName: "id", nullable: false, onDelete: "CASCADE")]
     private $tag;
 
-    /**
-     * @ORM\Column(type="date")
-     */
+    #[ORM\Column(type: "date")]
     private $date;
 
 
