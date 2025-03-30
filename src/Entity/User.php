@@ -16,8 +16,8 @@ class User {
     private $id;
 
     /**
-     * Many Users have One UserDetails.
-     * @ORM\ManyToOne(targetEntity="App\Entity\UserDetails")
+     * One User has One UserDetails.
+     * @ORM\OneToOne(targetEntity="App\Entity\UserDetails")
      * @ORM\JoinColumn(name="iddetails", referencedColumnName="id", nullable=false, onDelete="CASCADE")
      */
     private $userDetails;
