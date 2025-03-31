@@ -1,7 +1,10 @@
 <?php
 
 namespace App\Entity;
+
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 #[ORM\Entity]
 #[ORM\Table(name: "tags")]
@@ -21,8 +24,12 @@ class Tag {
     #[ORM\Column(type: "datetime")]
     private $createdAt;
 
+    #[ORM\OneToMany(mappedBy: "tag", targetEntity: "App\Entity\Marked")]
+    private $markedDates;
+
     public function __construct() {
         $this->createdAt = new \DateTime();
+        $this->markedDates = new ArrayCollection();
     }
 
     public function getId(): ?int { return $this->id; }
@@ -43,5 +50,9 @@ class Tag {
     public function setCreatedAt(\DateTimeInterface $createdAt): self {
         $this->createdAt = $createdAt;
         return $this;
+    }
+
+    public function getMarkedDates(): Collection {
+        return $this->markedDates;
     }
 }
