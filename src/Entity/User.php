@@ -2,10 +2,12 @@
 
 namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Entity]
 #[ORM\Table(name: "users")]
-class User {
+class User implements UserInterface, PasswordAuthenticatedUserInterface {
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: "AUTO")]
     #[ORM\Column(type: "integer")]
@@ -24,15 +26,18 @@ class User {
     #[ORM\Column(type: "boolean")]
     private $enabled = true;
 
-    #[ORM\Column(type: "string", length: 255)]
-    private $salt;
-
     #[ORM\Column(type: "datetime")]
     private $createdAt;
 
     public function __construct() {
         $this->createdAt = new \DateTime();
     }
+    public function getRoles(): array {
+        return ['ROLE_USER'];
+    }
+
+    public function eraseCredentials(): void { }
+    public function getUserIdentifier(): string { return $this->email; }
 
     public function getId(): ?int { return $this->id; }
 
@@ -57,12 +62,6 @@ class User {
     public function getEnabled(): ?bool { return $this->enabled; }
     public function setEnabled(bool $enabled): self {
         $this->enabled = $enabled;
-        return $this;
-    }
-
-    public function getSalt(): ?string { return $this->salt; }
-    public function setSalt(string $salt): self {
-        $this->salt = $salt;
         return $this;
     }
 

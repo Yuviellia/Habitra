@@ -28,7 +28,8 @@ services:
       POSTGRES_DB: habitra_database
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
-
+    ports:
+      - "5432:5432"
     healthcheck:
       test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB:-app}", "-U", "admin"]
       timeout: 5s
