@@ -30,6 +30,7 @@ class AuthControllerTest extends WebTestCase {
         $conn->executeStatement($sql);
     }
 
+    // LOGIN
     public function testLoginRequiresEmailAndPassword(): void {
         $this->client->request('POST', '/api/login', [], [], ['CONTENT_TYPE' => 'application/json']
             , json_encode([]));
@@ -98,5 +99,67 @@ class AuthControllerTest extends WebTestCase {
         $data = json_decode($response->getContent(), true);
         $this->assertSame('Login successful', $data['message']);
         $this->assertArrayHasKey('token', $data);
+    }
+
+
+    // REGISTER
+    public function testRegisterMissingRequiredFields(): void {
+        $this->client->request('POST', '/api/register', [], [], ['CONTENT_TYPE' => 'application/json']
+            , json_encode([
+                'email' => 'rrrr@example.com',
+                'password' => 'pass'
+            ]));
+
+        $response = $this->client->getResponse();
+        $this->assertSame(400, $response->getStatusCode());
+        $data = json_decode($response->getContent(), true);
+        $this->assertSame('Name, surname, email, and password required', $data['message']);
+    }
+
+    public function testRegisterEmailAlreadyExists(): void {
+        $details = new UserDetails();
+        $details->setName('Jasper');
+        $details->setSurname('Bee');
+        $this->em->persist($details);
+
+        $user = new User();
+        $user->setEmail('beelicious@example.com');
+        $user->setPassword($this->hasher->hashPassword($user, 'beez'));
+        $user->setUserDetails($details);
+        $user->setEnabled(true);
+        $user->setCreatedAt(new \DateTime());
+        $this->em->persist($user);
+        $this->em->flush();
+
+        $this->client->request('POST', '/api/register', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
+            'email' => 'beelicious@example.com',
+            'password' => 'beez',
+            'name' => 'Jasper',
+            'surname' => 'Bee'
+        ]));
+
+        $response = $this->client->getResponse();
+        $this->assertSame(400, $response->getStatusCode());
+        $data = json_decode($response->getContent(), true);
+        $this->assertSame('Email already registered', $data['message']);
+    }
+
+    public function testRegisterSuccess(): void {
+        $this->client->request('POST', '/api/register', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
+            'email' => 'pog@example.com',
+            'password' => 'pogchamp',
+            'name' => 'Pog',
+            'surname' => 'Champ',
+            'phone' => '1234567890'
+        ]));
+
+        $response = $this->client->getResponse();
+        $this->assertSame(201, $response->getStatusCode());
+        $data = json_decode($response->getContent(), true);
+        $this->assertSame('User registered successfully', $data['message']);
+        $this->assertSame('pog@example.com', $data['user']['email']);
+        $this->assertSame('Pog', $data['user']['name']);
+        $this->assertSame('Champ', $data['user']['surname']);
+        $this->assertSame('1234567890', $data['user']['phone']);
     }
 }
