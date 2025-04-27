@@ -1,0 +1,9 @@
+nelmio_api_doc:
+  documentation:
+    info:
+      title: 'Habitra API'
+      version: '1.0.0'
+      description: 'API do zarządzania zadaniami'
+  areas:
+    path_patterns:
+      - ^/api(?!/doc$)
