@@ -1,19 +1,20 @@
 <?php
-
 namespace App\Controller;
 
-use App\Entity\User;
-use App\Entity\UserDetails;
-use App\Repository\UserRepository;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Service\AuthService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use OpenApi\Attributes as OA;
 
 class AuthController extends AbstractController {
+    private AuthService $authService;
+
+    public function __construct(AuthService $authService) {
+        $this->authService = $authService;
+    }
+
     #[Route('/api/login', name: 'api_login', methods: ['POST'])]
     #[OA\Post(
         path: "/api/login",
@@ -60,26 +61,10 @@ class AuthController extends AbstractController {
             type: "object"
         )
     )]
-    public function login(Request $request, UserRepository $userRepository, UserPasswordHasherInterface $passwordHasher): JsonResponse {
+    public function login(Request $request): JsonResponse {
         $data = json_decode($request->getContent(), true);
-
-        if (empty($data['email']) || empty($data['password'])) {
-            return $this->json(['message' => 'Email and password required'], 400);
-        }
-
-        $user = $userRepository->findOneBy(['email' => $data['email']]);
-        if (!$user) {
-            return $this->json(['message' => 'Invalid credentials [email]'], 401);
-        }
-
-        if (!$passwordHasher->isPasswordValid($user, $data['password'])) {
-            return $this->json(['message' => 'Invalid credentials [password]'], 401);
-        }
-
-        return $this->json([
-            'message' => 'Login successful',
-            'token' => 'example-token'
-        ], 200);
+        $result = $this->authService->login($data);
+        return $this->json($result['body'], $result['status']);
     }
 
     #[Route('/api/register', name: 'api_register', methods: ['POST'])]
@@ -131,48 +116,9 @@ class AuthController extends AbstractController {
             type: "object"
         )
     )]
-    #[Route('/api/register', name: 'api_register', methods: ['POST'])]
-    public function register(Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher): JsonResponse {
+    public function register(Request $request): JsonResponse {
         $data = json_decode($request->getContent(), true);
-
-        if (empty($data['email']) || empty($data['password']) || empty($data['name']) || empty($data['surname'])) {
-            return $this->json(['message' => 'Name, surname, email, and password required'], 400);
-        }
-
-        $existingUser = $entityManager->getRepository(User::class)->findOneBy(['email' => $data['email']]);
-        if ($existingUser) {
-            return $this->json(['message' => 'Email already registered'], 400);
-        }
-
-        $userDetails = new UserDetails();
-        $userDetails->setName($data['name']);
-        $userDetails->setSurname($data['surname']);
-        $userDetails->setPhone($data['phone'] ?? null);
-
-        $entityManager->persist($userDetails);
-        $entityManager->flush();
-
-        $user = new User();
-        $user->setEmail($data['email']);
-
-        $hashedPassword = $passwordHasher->hashPassword($user, $data['password']);
-        $user->setPassword($hashedPassword);
-        $user->setUserDetails($userDetails);
-        $user->setEnabled(true);
-        $user->setCreatedAt(new \DateTime());
-
-        $entityManager->persist($user);
-        $entityManager->flush();
-
-        return $this->json([
-            'message' => 'User registered successfully',
-            'user' => [
-                'id' => $user->getId(),
-                'email' => $user->getEmail(),
-                'name' => $userDetails->getName(),
-                'surname' => $userDetails->getSurname(),
-                'phone' => $userDetails->getPhone()
-            ]
-        ], 201);
+        $result = $this->authService->register($data);
+        return $this->json($result['body'], $result['status']);
     }
 }
