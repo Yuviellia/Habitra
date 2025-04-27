@@ -1,6 +1,4 @@
 <?php
-
-// src/Repository/TodoRepository.php
 namespace App\Repository;
 
 use App\Entity\Todo;

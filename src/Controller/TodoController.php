@@ -1,28 +1,19 @@
 <?php
-
 namespace App\Controller;
 
-use App\Entity\Todo;
-use App\Entity\User;
-use App\Repository\TodoRepository;
-use App\Repository\UserRepository;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Service\TodoService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Attributes as OA;
 
 class TodoController extends AbstractController {
-    private $entityManager;
-    private $todoRepository;
-    private $userRepository;
-    public function __construct(EntityManagerInterface $entityManager, TodoRepository $todoRepository, UserRepository $userRepository) {
-        $this->entityManager = $entityManager;
-        $this->todoRepository = $todoRepository;
-        $this->userRepository = $userRepository;
-    }
+    private TodoService $todoService;
 
+    public function __construct(TodoService $todoService) {
+        $this->todoService = $todoService;
+    }
     #[Route('/api/user/{userId}/todos', name: 'get_user_todos', methods: ['GET'])]
     #[OA\Get(
         path: '/api/user/{userId}/todos',
@@ -56,13 +47,8 @@ class TodoController extends AbstractController {
         ]
     )]
     public function getUserTodos(int $userId): JsonResponse {
-        $todos = $this->todoRepository->getTodosByUserId($userId);
-
-        if (empty($todos)) {
-            return $this->json(['message' => 'No todos found for this user'], 404);
-        }
-
-        return $this->json($todos, 200);
+        $result = $this->todoService->getUserTodos($userId);
+        return $this->json($result['body'], $result['status']);
     }
 
 
@@ -114,34 +100,8 @@ class TodoController extends AbstractController {
         ]
     )]
     public function createUserTodo(int $userId, Request $request): JsonResponse {
-        $user = $this->userRepository->find($userId);
-
-        if (!$user) {
-            return $this->json(['message' => 'User not found'], 404);
-        }
-
         $data = json_decode($request->getContent(), true);
-
-        if (empty($data['task'])) {
-            return $this->json(['message' => 'Task is required'], 400);
-        }
-
-        $todo = new Todo();
-        $todo->setUser($user);
-        $todo->setTask($data['task']);
-        $todo->setCreatedAt(new \DateTime());
-
-        $this->entityManager->persist($todo);
-        $this->entityManager->flush();
-
-        return $this->json([
-            'message' => 'Todo created successfully',
-            'todo' => [
-                'id' => $todo->getId(),
-                'userId' => $user->getId(),
-                'task' => $todo->getTask(),
-                'createdAt' => $todo->getCreatedAt()->format('Y-m-d H:i:s'),
-            ]
-        ], 201);
+        $result = $this->todoService->createUserTodo($userId, $data);
+        return $this->json($result['body'], $result['status']);
     }
 }
