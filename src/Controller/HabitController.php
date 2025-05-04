@@ -1,12 +1,14 @@
 <?php
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Service\HabitService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Attributes as OA;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class HabitController extends AbstractController {
     private HabitService $habitService;
@@ -15,9 +17,9 @@ class HabitController extends AbstractController {
         $this->habitService = $habitService;
     }
 
-    #[Route('/api/user/{userId}/habits', name: 'get_user_habits', methods: ['GET'])]
+    #[Route('/api/habits', name: 'get_user_habits', methods: ['GET'])]
     #[OA\Get(
-        path: '/api/user/{userId}/habits',
+        path: '/api/habits',
         summary: 'Retrieve all habits for a user',
         parameters: [
             new OA\Parameter(
@@ -58,14 +60,18 @@ class HabitController extends AbstractController {
             new OA\Response(response: 404, description: 'No habits found for this user')
         ]
     )]
-    public function getUserHabits(int $userId): JsonResponse {
-        $result = $this->habitService->getUserHabits($userId);
+    #[IsGranted('ROLE_USER')]
+    public function getUserHabits(): JsonResponse {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $result = $this->habitService->getUserHabits($user->getId());
         return $this->json($result['body'], $result['status']);
     }
 
-    #[Route('/api/user/{userId}/habits', name: 'create_user_habit', methods: ['POST'])]
+    #[Route('/api/habits', name: 'create_user_habit', methods: ['POST'])]
     #[OA\Post(
-        path: '/api/user/{userId}/habits',
+        path: '/api/habits',
         summary: 'Create a new habit for the user',
         requestBody: new OA\RequestBody(
             required: true,
@@ -108,15 +114,19 @@ class HabitController extends AbstractController {
             new OA\Response(response: 400, description: 'Bad Request (name missing)')
         ]
     )]
-    public function createUserHabit(int $userId, Request $request): JsonResponse {
+    #[IsGranted('ROLE_USER')]
+    public function createUserHabit(Request $request): JsonResponse {
+        /** @var User $user */
+        $user = $this->getUser();
         $data = json_decode($request->getContent(), true);
-        $result = $this->habitService->createUserHabit($userId, $data);
+
+        $result = $this->habitService->createUserHabit($user->getId(), $data);
         return $this->json($result['body'], $result['status']);
     }
 
-    #[Route('/api/user/{userId}/habits/{habitId}/mark', name: 'mark_habit', methods: ['POST'])]
+    #[Route('/api/habits/{habitId}/mark', name: 'mark_habit', methods: ['POST'])]
     #[OA\Post(
-        path: '/api/user/{userId}/habits/{habitId}/mark',
+        path: '/api/habits/{habitId}/mark',
         summary: 'Mark a habit for a specific date',
         requestBody: new OA\RequestBody(
             required: true,
@@ -166,9 +176,13 @@ class HabitController extends AbstractController {
             new OA\Response(response: 404, description: 'User or Habit not found')
         ]
     )]
-    public function markHabit(int $userId, int $habitId, Request $request): JsonResponse {
+    #[IsGranted('ROLE_USER')]
+    public function markHabit(int $habitId, Request $request): JsonResponse {
+        /** @var User $user */
+        $user = $this->getUser();
         $data = json_decode($request->getContent(), true);
-        $result = $this->habitService->markHabit($userId, $habitId, $data);
+
+        $result = $this->habitService->markHabit($user->getId(), $habitId, $data);
         return $this->json($result['body'], $result['status']);
     }
 }

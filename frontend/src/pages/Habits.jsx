@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 
 function Habits() {
-    const userId = 1;
     const [tags, setTags] = useState([]);
     const [newTag, setNewTag] = useState('');
     const [loading, setLoading] = useState(true);
@@ -19,7 +18,7 @@ function Habits() {
         setRefreshing(true);
 
         const token = getAuthToken(); // Get token for authentication
-        fetch(`http://127.0.0.1:8000/api/user/${userId}/habits`, {
+        fetch(`http://127.0.0.1:8000/api/habits`, {
             headers: {
                 'Authorization': `Bearer ${token}`, // Add Bearer token
                 'Content-Type': 'application/json'
@@ -60,7 +59,7 @@ function Habits() {
         setSubmitting(true);
 
         const token = getAuthToken(); // Get token for authentication
-        fetch(`http://127.0.0.1:8000/api/user/${userId}/habits`, {
+        fetch(`http://127.0.0.1:8000/api/habits`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`, // Add Bearer token
@@ -80,8 +79,8 @@ function Habits() {
     const handleMarkDate = (habitId, date) => {
         setMarking((prev) => ({ ...prev, [habitId]: true }));
 
-        const token = getAuthToken(); // Get token for authentication
-        fetch(`http://127.0.0.1:8000/api/user/${userId}/habits/${habitId}/mark`, {
+        const token = getAuthToken();
+        fetch(`http://127.0.0.1:8000/api/habits/${habitId}/mark`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`, // Add Bearer token
