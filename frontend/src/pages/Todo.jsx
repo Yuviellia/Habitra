@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 
 function Todos() {
-    const userId = 1;
     const [todos, setTodos] = useState([]);
     const [newTodo, setNewTodo] = useState('');
     const [loading, setLoading] = useState(true);
@@ -9,18 +8,17 @@ function Todos() {
     const [submitting, setSubmitting] = useState(false);
     const [notFound, setNotFound] = useState(false);
 
-    // Function to retrieve the authentication token
     const getAuthToken = () => {
-        return localStorage.getItem('token'); // Retrieve token from localStorage
+        return localStorage.getItem('token');
     };
 
     const fetchTodos = () => {
         setRefreshing(true);
 
-        const token = getAuthToken(); // Get the token for authentication
-        fetch(`http://127.0.0.1:8000/api/user/${userId}/todos`, {
+        const token = getAuthToken();
+        fetch(`http://127.0.0.1:8000/api/todos`, {
             headers: {
-                'Authorization': `Bearer ${token}`, // Add Bearer token for authentication
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
             },
         })
@@ -58,18 +56,18 @@ function Todos() {
         e.preventDefault();
         setSubmitting(true);
 
-        const token = getAuthToken(); // Get token for authentication
-        fetch(`http://127.0.0.1:8000/api/user/${userId}/todos`, {
+        const token = getAuthToken();
+        fetch(`http://127.0.0.1:8000/api/todos`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`, // Add Bearer token for authentication
-                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`, // Add Bearer token
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({ task: newTodo }),
         })
             .then((res) => res.json())
             .then((data) => {
-                setTodos([...todos, data.todo]); // Append new todo
+                setTodos([...todos, data.todo]);
                 setNewTodo('');
                 setNotFound(false);
             })

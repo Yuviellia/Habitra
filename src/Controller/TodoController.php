@@ -14,9 +14,9 @@ class TodoController extends AbstractController {
     public function __construct(TodoService $todoService) {
         $this->todoService = $todoService;
     }
-    #[Route('/api/user/{userId}/todos', name: 'get_user_todos', methods: ['GET'])]
+    #[Route('/api/todos', name: 'get_user_todos', methods: ['GET'])]
     #[OA\Get(
-        path: '/api/user/{userId}/todos',
+        path: '/api/todos',
         summary: 'Retrieve all todos for a user',
         parameters: [
             new OA\Parameter(
@@ -46,15 +46,16 @@ class TodoController extends AbstractController {
             new OA\Response(response: 404, description: 'No todos found for this user')
         ]
     )]
-    public function getUserTodos(int $userId): JsonResponse {
-        $result = $this->todoService->getUserTodos($userId);
+    public function getUserTodos(): JsonResponse {
+        $user = $this->getUser();
+        $result = $this->todoService->getUserTodos($user->getId());
         return $this->json($result['body'], $result['status']);
     }
 
 
-    #[Route('/api/user/{userId}/todos', name: 'create_user_todo', methods: ['POST'])]
+    #[Route('/api/todos', name: 'create_user_todo', methods: ['POST'])]
     #[OA\Post(
-        path: '/api/user/{userId}/todos',
+        path: '/api/todos',
         summary: 'Create a new todo for the user',
         requestBody: new OA\RequestBody(
             required: true,
@@ -99,9 +100,10 @@ class TodoController extends AbstractController {
             new OA\Response(response: 404, description: 'User not found')
         ]
     )]
-    public function createUserTodo(int $userId, Request $request): JsonResponse {
+    public function createUserTodo(Request $request): JsonResponse {
+        $user = $this->getUser();
         $data = json_decode($request->getContent(), true);
-        $result = $this->todoService->createUserTodo($userId, $data);
+        $result = $this->todoService->createUserTodo($user->getId(), $data);
         return $this->json($result['body'], $result['status']);
     }
 }

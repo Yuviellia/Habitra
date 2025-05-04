@@ -7,20 +7,19 @@ function Habits() {
     const [refreshing, setRefreshing] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [notFound, setNotFound] = useState(false);
-    const [marking, setMarking] = useState({}); // { habitId: true/false }
+    const [marking, setMarking] = useState({});
 
     const getAuthToken = () => {
-        // Retrieve the token from localStorage or sessionStorage
-        return localStorage.getItem("token"); // Adjust if you use sessionStorage or another storage method
+        return localStorage.getItem("token");
     };
 
     const fetchHabits = () => {
         setRefreshing(true);
 
-        const token = getAuthToken(); // Get token for authentication
+        const token = getAuthToken();
         fetch(`http://127.0.0.1:8000/api/habits`, {
             headers: {
-                'Authorization': `Bearer ${token}`, // Add Bearer token
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             }
         })
