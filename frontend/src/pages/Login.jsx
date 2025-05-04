@@ -31,10 +31,11 @@ function Login() {
             console.log('Zalogowano:', data);
 
             // Save user session (example: save token)
-           // localStorage.setItem('token', data.token);
+            localStorage.setItem('token', data.token);  // Save the token in localStorage
 
-            // Redirect to homepage
-            //navigate('/');
+            // Optionally, redirect to the homepage or dashboard
+            navigate('/');  // Adjust the redirect path as needed
+
         } catch (err) {
             setError(err.message);
         } finally {
@@ -46,8 +47,22 @@ function Login() {
         <div>
             <h2>Logowanie</h2>
             <form onSubmit={handleSubmit}>
-                <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
-                <input type="password" name="password" placeholder="Hasło" value={formData.password} onChange={handleChange} required />
+                <input
+                    type="email"
+                    name="email"
+                    placeholder="Email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                />
+                <input
+                    type="password"
+                    name="password"
+                    placeholder="Hasło"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                />
                 <button type="submit" disabled={loading}>Zaloguj</button>
             </form>
             {loading && <p>Logowanie...</p>}

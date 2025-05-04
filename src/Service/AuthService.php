@@ -11,15 +11,18 @@ class AuthService {
     private UserRepository $userRepository;
     private EntityManagerInterface $entityManager;
     private UserPasswordHasherInterface $passwordHasher;
+    private JwtManager $jwtManager;
 
     public function __construct(
         UserRepository $userRepository,
         EntityManagerInterface $entityManager,
-        UserPasswordHasherInterface $passwordHasher
+        UserPasswordHasherInterface $passwordHasher,
+        JwtManager $jwtManager
     ) {
         $this->userRepository = $userRepository;
         $this->entityManager = $entityManager;
         $this->passwordHasher = $passwordHasher;
+        $this->jwtManager = $jwtManager;
     }
 
     public function login(array $data): array {
@@ -45,11 +48,13 @@ class AuthService {
             ];
         }
 
+        $token = $this->jwtManager->create($user);
+
         return [
             'status' => 200,
             'body' => [
                 'message' => 'Login successful',
-                'token' => 'example-token',
+                'token' => $token,
             ],
         ];
     }
@@ -69,6 +74,7 @@ class AuthService {
             ];
         }
 
+        // Create new UserDetails
         $userDetails = new UserDetails();
         $userDetails->setName($data['name'])
             ->setSurname($data['surname'])
@@ -77,6 +83,7 @@ class AuthService {
         $this->entityManager->persist($userDetails);
         $this->entityManager->flush();
 
+        // Create new User
         $user = new User();
         $hashed = $this->passwordHasher->hashPassword($user, $data['password']);
         $user->setEmail($data['email'])
@@ -88,10 +95,13 @@ class AuthService {
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
+        $token = $this->jwtManager->create($user);
+
         return [
             'status' => 201,
             'body' => [
                 'message' => 'User registered successfully',
+                'token' => $token,
                 'user' => [
                     'id' => $user->getId(),
                     'email' => $user->getEmail(),

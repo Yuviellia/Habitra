@@ -9,10 +9,21 @@ function Todos() {
     const [submitting, setSubmitting] = useState(false);
     const [notFound, setNotFound] = useState(false);
 
+    // Function to retrieve the authentication token
+    const getAuthToken = () => {
+        return localStorage.getItem('token'); // Retrieve token from localStorage
+    };
+
     const fetchTodos = () => {
         setRefreshing(true);
 
-        fetch(`http://127.0.0.1:8000/api/user/${userId}/todos`)
+        const token = getAuthToken(); // Get the token for authentication
+        fetch(`http://127.0.0.1:8000/api/user/${userId}/todos`, {
+            headers: {
+                'Authorization': `Bearer ${token}`, // Add Bearer token for authentication
+                'Content-Type': 'application/json',
+            },
+        })
             .then((res) => {
                 if (res.status === 404) {
                     setTodos([]); // No todos found
@@ -47,9 +58,13 @@ function Todos() {
         e.preventDefault();
         setSubmitting(true);
 
+        const token = getAuthToken(); // Get token for authentication
         fetch(`http://127.0.0.1:8000/api/user/${userId}/todos`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Authorization': `Bearer ${token}`, // Add Bearer token for authentication
+                'Content-Type': 'application/json',
+            },
             body: JSON.stringify({ task: newTodo }),
         })
             .then((res) => res.json())

@@ -6,6 +6,7 @@
 parameters:
 
 services:
+
     # default configuration for services in *this* file
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.
@@ -22,5 +23,11 @@ services:
     App\EventListener\ExceptionListener:
         tags:
             - { name: kernel.event_listener, event: kernel.exception }
+
+    App\Service\JwtManager:
+        arguments:
+            $privateKeyPath: '%env(JWT_SECRET_KEY)%'
+            $publicKeyPath: '%env(JWT_PUBLIC_KEY)%'
+            $passphrase: '%env(JWT_PASSPHRASE)%'
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

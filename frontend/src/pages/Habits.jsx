@@ -10,10 +10,21 @@ function Habits() {
     const [notFound, setNotFound] = useState(false);
     const [marking, setMarking] = useState({}); // { habitId: true/false }
 
+    const getAuthToken = () => {
+        // Retrieve the token from localStorage or sessionStorage
+        return localStorage.getItem("token"); // Adjust if you use sessionStorage or another storage method
+    };
+
     const fetchHabits = () => {
         setRefreshing(true);
 
-        fetch(`http://127.0.0.1:8000/api/user/${userId}/habits`)
+        const token = getAuthToken(); // Get token for authentication
+        fetch(`http://127.0.0.1:8000/api/user/${userId}/habits`, {
+            headers: {
+                'Authorization': `Bearer ${token}`, // Add Bearer token
+                'Content-Type': 'application/json'
+            }
+        })
             .then((res) => {
                 if (res.status === 404) {
                     setTags([]); // No habits found
@@ -48,9 +59,13 @@ function Habits() {
         e.preventDefault();
         setSubmitting(true);
 
+        const token = getAuthToken(); // Get token for authentication
         fetch(`http://127.0.0.1:8000/api/user/${userId}/habits`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Authorization': `Bearer ${token}`, // Add Bearer token
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({ name: newTag }),
         })
             .then((res) => res.json())
@@ -65,9 +80,13 @@ function Habits() {
     const handleMarkDate = (habitId, date) => {
         setMarking((prev) => ({ ...prev, [habitId]: true }));
 
+        const token = getAuthToken(); // Get token for authentication
         fetch(`http://127.0.0.1:8000/api/user/${userId}/habits/${habitId}/mark`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Authorization': `Bearer ${token}`, // Add Bearer token
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({ date }),
         })
             .then((res) => res.json())

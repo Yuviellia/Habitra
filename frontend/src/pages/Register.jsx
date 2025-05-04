@@ -39,6 +39,11 @@ function Register() {
             setSuccess(true);
             setFormData({ name: '', surname: '', phone: '', email: '', password: '' });
 
+            // Optionally, save token after registration
+            const data = await response.json();
+            localStorage.setItem('token', data.token);  // Save token in localStorage
+            navigate('/');  // Redirect after registration
+
         } catch (err) {
             setError(err.message);
         } finally {
