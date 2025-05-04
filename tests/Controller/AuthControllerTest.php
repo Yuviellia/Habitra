@@ -6,6 +6,7 @@ use App\Entity\UserDetails;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 
 class AuthControllerTest extends WebTestCase {
     private $client;
@@ -14,8 +15,14 @@ class AuthControllerTest extends WebTestCase {
 
     protected function setUp(): void {
         $this->client = static::createClient();
+        $container = self::getContainer();
+
         $this->em    = self::getContainer()->get(EntityManagerInterface::class);
         $this->hasher= self::getContainer()->get(UserPasswordHasherInterface::class);
+
+        $mockJwtManager = $this->createMock(JWTTokenManagerInterface::class);
+        $mockJwtManager->method('create')->willReturn('test-token');
+        $container->set(JWTTokenManagerInterface::class, $mockJwtManager);
 
         $conn = $this->em->getConnection();
 
@@ -48,7 +55,7 @@ class AuthControllerTest extends WebTestCase {
         $response = $this->client->getResponse();
         $this->assertSame(401, $response->getStatusCode());
         $data = json_decode($response->getContent(), true);
-        $this->assertSame('Invalid credentials [email]', $data['message']);
+        $this->assertSame('Invalid credentials.', $data['message']);
     }
 
     public function testLoginInvalidPassword(): void {
@@ -70,10 +77,12 @@ class AuthControllerTest extends WebTestCase {
             'CONTENT_TYPE'=>'application/json'
         ], json_encode(['email'=>'usercostam@example.com','password'=>'NIEhaslo']));
 
+        echo $this->client->getResponse()->getContent();
+
         $response = $this->client->getResponse();
         $this->assertSame(401, $response->getStatusCode());
         $data = json_decode($response->getContent(), true);
-        $this->assertSame('Invalid credentials [password]', $data['message']);
+        $this->assertSame('Invalid credentials.', $data['message']);
     }
 
     public function testLoginSuccess(): void {
@@ -97,7 +106,8 @@ class AuthControllerTest extends WebTestCase {
         $response = $this->client->getResponse();
         $this->assertSame(200, $response->getStatusCode());
         $data = json_decode($response->getContent(), true);
-        $this->assertSame('Login successful', $data['message']);
+        print_r($data);
+        $this->assertSame('Login successful', $data['body']['message']);
         $this->assertArrayHasKey('token', $data);
     }
 
