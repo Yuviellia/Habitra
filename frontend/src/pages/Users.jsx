@@ -19,14 +19,21 @@ function Users() {
             },
         })
             .then(async (res) => {
-                if (res.status === 404) {
-                    throw new Error('Nie znaleziono użytkowników');
+                const json = await res.json().catch(() => null);
+
+                if (!json || typeof json !== 'object') {
+                    throw new Error('Nieprawidłowa odpowiedź serwera');
                 }
-                if (!res.ok) {
-                    const { message } = await res.json().catch(() => ({ message: res.statusText }));
-                    throw new Error(message);
+
+                if (json.status === 404) {
+                    throw new Error(json.body?.message || 'Nie znaleziono użytkowników');
                 }
-                return res.json();
+
+                if (json.status !== 200) {
+                    throw new Error(json.body?.message || 'Błąd serwera');
+                }
+
+                return json.body;
             })
             .then((data) => {
                 setUsers(data);

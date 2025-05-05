@@ -116,13 +116,24 @@ class AuthService {
     public function getNonAdminUsers(): array {
         $users = $this->userRepository->findByRoleNot('ROLE_ADMIN');
 
-        return array_map(function (User $user) {
+        if (empty($users)) {
+            return [
+                'status' => 404,
+                'body'   => ['message' => 'No non-admin users found'],
+            ];
+        }
+
+        $data = array_map(function (User $user) {
             return [
                 'id'    => $user->getId(),
                 'email' => $user->getEmail(),
-                'role'  => $user->getRoles()[0],
+                'role'  => $user->getRoles()[0] ?? null,
             ];
         }, $users);
-    }
 
+        return [
+            'status' => 200,
+            'body'   => $data,
+        ];
+    }
 }
