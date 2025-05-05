@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Repository;
 
 use App\Entity\User;
@@ -13,5 +12,12 @@ class UserRepository extends ServiceEntityRepository {
 
     public function findByEmail(string $email): ?User {
         return $this->findOneBy(['email' => $email]);
+    }
+    public function findByRoleNot(string $excludedRole): array {
+        return $this->createQueryBuilder('u')
+            ->where('u.role != :excludedRole')
+            ->setParameter('excludedRole', $excludedRole)
+            ->getQuery()
+            ->getResult();
     }
 }

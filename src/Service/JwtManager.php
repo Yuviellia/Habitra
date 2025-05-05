@@ -20,6 +20,7 @@ class JwtManager {
 
         $payload = [
             'username' => $user->getEmail(),
+            'roles' => $user->getRoles(),
             'exp' => time() + 3600,
         ];
 

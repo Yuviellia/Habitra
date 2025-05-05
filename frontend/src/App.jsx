@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Habits from './pages/Habits';
 import Todo from './pages/Todo';
 import Logout from "./pages/Logout";
+import Users from "./pages/Users";
 
 function App() {
     return (
@@ -14,7 +15,8 @@ function App() {
                 <Link to="/login">Login</Link> |
                 <Link to="/logout">Logout</Link> |
                 <Link to="/habits">Habits</Link> |
-                <Link to="/todo">Todo</Link>
+                <Link to="/todo">Todo</Link> |
+                <Link to="/users">Users</Link>
             </nav>
 
             <Routes>
@@ -24,6 +26,7 @@ function App() {
                 <Route path="/logout" element={<Logout />} />
                 <Route path="/habits" element={<Habits />} />
                 <Route path="/todo" element={<Todo />} />
+                <Route path="/users" element={<Users />} />
             </Routes>
         </Router>
     );

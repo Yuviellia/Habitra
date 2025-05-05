@@ -112,4 +112,17 @@ class AuthService {
             ],
         ];
     }
+
+    public function getNonAdminUsers(): array {
+        $users = $this->userRepository->findByRoleNot('ROLE_ADMIN');
+
+        return array_map(function (User $user) {
+            return [
+                'id'    => $user->getId(),
+                'email' => $user->getEmail(),
+                'role'  => $user->getRoles()[0],
+            ];
+        }, $users);
+    }
+
 }

@@ -23,6 +23,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
     #[ORM\Column(type: "string", length: 255)]
     private $password;
 
+    #[ORM\Column(type: "string", length: 20)]
+    private $role;
+
     #[ORM\Column(type: "boolean")]
     private $enabled = true;
 
@@ -32,8 +35,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
     public function __construct() {
         $this->createdAt = new \DateTime();
     }
-    public function getRoles(): array {
-        return ['ROLE_USER'];
+    public function getRoles(): array { return [$this->role]; } //
+    public function setRoles(string $role): self {
+        $this->role = $role;
+        return $this;
     }
 
     public function eraseCredentials(): void { }

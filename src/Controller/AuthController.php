@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Attributes as OA;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class AuthController extends AbstractController {
     private AuthService $authService;
@@ -120,5 +121,13 @@ class AuthController extends AbstractController {
         $data = json_decode($request->getContent(), true);
         $result = $this->authService->register($data);
         return $this->json($result['body'], $result['status']);
+    }
+
+
+    #[Route('/api/users', methods:['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function getUsers(): JsonResponse {
+        $users = $this->authService->getNonAdminUsers();
+        return $this->json($users);
     }
 }
