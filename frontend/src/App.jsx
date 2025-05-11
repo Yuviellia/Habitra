@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import Habits from './pages/Habits';
@@ -7,13 +7,21 @@ import Logout from "./pages/Logout";
 import Users from "./pages/Users";
 import GuestRoute from './components/GuestRoute';
 import PrivateRoute from './components/PrivateRoute';
+import { useEffect, useState } from 'react';
 
-function App() {
+function AppWrapper() {
     const token = localStorage.getItem("token");
+    const location = useLocation();
+    const [showNav, setShowNav] = useState(false);
+
+    useEffect(() => {
+        const hideOn = ['/login', '/register'];
+        setShowNav(token && !hideOn.includes(location.pathname));
+    }, [token, location]);
 
     return (
-        <Router>
-            {token && (
+        <>
+            {showNav && (
                 <nav>
                     <Link to="/habits">Habits</Link> |
                     <Link to="/todo">Todo</Link> |
@@ -58,9 +66,16 @@ function App() {
                         <Users />
                     </PrivateRoute>
                 } />
+                <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-        </Router>
+        </>
     );
 }
 
-export default App;
+export default function App() {
+    return (
+        <Router>
+            <AppWrapper />
+        </Router>
+    );
+}
