@@ -6,6 +6,8 @@ use App\Entity\UserDetails;
 use App\Entity\Tag;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+
 
 class HabitControllerTest extends WebTestCase {
     private $client;
@@ -36,6 +38,7 @@ class HabitControllerTest extends WebTestCase {
         $user->setEmail($email);
         $user->setPassword('irrelevant');
         $user->setUserDetails($details);
+        $user->setRoles('ROLE_USER');
         $user->setEnabled(true);
         $user->setCreatedAt(new \DateTime());
         $this->em->persist($user);
@@ -45,7 +48,13 @@ class HabitControllerTest extends WebTestCase {
     }
 
     public function testGetUserHabitsNotFound(): void {
-        $this->client->request('GET', '/api/user/999/habits');
+        $user = $this->createUser();
+        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
+        $token = $jwtManager->create($user);
+
+        $this->client->request('GET', '/api/habits', [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+        ]);
         $response = $this->client->getResponse();
         $this->assertSame(404, $response->getStatusCode());
         $this->assertSame('No habits found for this user', json_decode($response->getContent(), true)['message']);
@@ -53,22 +62,32 @@ class HabitControllerTest extends WebTestCase {
 
     public function testCreateHabitMissingName(): void {
         $user = $this->createUser();
-        $this->client->request('POST', "/api/user/{$user->getId()}/habits", [], [], ['CONTENT_TYPE'=>'application/json'], json_encode([]));
+        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
+        $token = $jwtManager->create($user);
+
+        $this->client->request('POST', "/api/habits", [], [], [
+            'CONTENT_TYPE'=>'application/json',
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+        ], json_encode([]));
         $response = $this->client->getResponse();
         $this->assertSame(400, $response->getStatusCode());
         $this->assertSame('Habit name is required', json_decode($response->getContent(), true)['message']);
     }
 
-    public function testCreateHabitUserNotFound(): void {
-        $this->client->request('POST', '/api/user/999/habits', [], [], ['CONTENT_TYPE'=>'application/json'], json_encode(['name'=>'Read']));
+    public function testCreateHabitUnauthorised(): void {
+        $this->client->request('POST', '/api/habits', [], [], ['CONTENT_TYPE'=>'application/json'], json_encode(['name'=>'Read']));
         $response = $this->client->getResponse();
-        $this->assertSame(404, $response->getStatusCode());
-        $this->assertSame('User not found', json_decode($response->getContent(), true)['message']);
+        $this->assertSame(401, $response->getStatusCode());
     }
 
     public function testCreateHabitSuccess(): void {
         $user = $this->createUser();
-        $this->client->request('POST', "/api/user/{$user->getId()}/habits", [], [], ['CONTENT_TYPE'=>'application/json'], json_encode(['name'=>'Read']));
+        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
+        $token = $jwtManager->create($user);
+        $this->client->request('POST', "/api/habits", [], [], [
+            'CONTENT_TYPE'=>'application/json',
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+        ], json_encode(['name'=>'Read']));
         $response = $this->client->getResponse();
         $this->assertSame(201, $response->getStatusCode());
         $data = json_decode($response->getContent(), true);
