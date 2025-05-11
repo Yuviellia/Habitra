@@ -1,4 +1,6 @@
 <?php
+
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\User;
@@ -13,7 +15,6 @@ class TodoControllerTest extends WebTestCase {
         $this->client = static::createClient();
         $this->em = self::getContainer()->get(EntityManagerInterface::class);
 
-        // Clear tables (you can customize this to fit your DB setup)
         $conn = $this->em->getConnection();
         $schemaManager = $conn->createSchemaManager();
         $tables = $schemaManager->listTableNames();
@@ -35,6 +36,7 @@ class TodoControllerTest extends WebTestCase {
         $user->setEmail($email);
         $user->setPassword('i');
         $user->setUserDetails($details);
+        $user->setRoles('ROLE_USER');
         $user->setEnabled(true);
         $user->setCreatedAt(new \DateTime());
         $this->em->persist($user);
@@ -44,7 +46,12 @@ class TodoControllerTest extends WebTestCase {
     }
     public function testGetTodosUserHasNone(): void {
         $user = $this->createUser();
-        $this->client->request('GET', "/api/user/{$user->getId()}/todos");
+        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
+        $token = $jwtManager->create($user);
+
+        $this->client->request('GET', "/api/todos", [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+        ]);
 
         $response = $this->client->getResponse();
         $this->assertSame(404, $response->getStatusCode());
@@ -52,6 +59,8 @@ class TodoControllerTest extends WebTestCase {
     }
     public function testGetTodosUserHasSome(): void {
         $user = $this->createUser();
+        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
+        $token = $jwtManager->create($user);
 
         $todo = new Todo();
         $todo->setUser($user);
@@ -60,7 +69,9 @@ class TodoControllerTest extends WebTestCase {
         $this->em->persist($todo);
         $this->em->flush();
 
-        $this->client->request('GET', "/api/user/{$user->getId()}/todos");
+        $this->client->request('GET', "/api/todos", [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+        ]);
 
         $response = $this->client->getResponse();
         $this->assertSame(200, $response->getStatusCode());
@@ -70,25 +81,35 @@ class TodoControllerTest extends WebTestCase {
     }
     public function testCreateTodoMissingTask(): void {
         $user = $this->createUser();
+        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
+        $token = $jwtManager->create($user);
 
-        $this->client->request('POST', "/api/user/{$user->getId()}/todos", [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([]));
+        $this->client->request('POST', "/api/todos", [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+        ], json_encode([]));
 
         $response = $this->client->getResponse();
         $this->assertSame(400, $response->getStatusCode());
         $this->assertSame('Task is required', json_decode($response->getContent(), true)['message']);
     }
-    public function testCreateTodoUserNotFound(): void {
-        $this->client->request('POST', '/api/user/99999/todos', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode(['task' => 'Do laundry']));
+    public function testCreateTodoUnauthorised(): void {
+        $this->client->request('POST', '/api/todos', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode(['task' => 'Do laundry']));
 
         $response = $this->client->getResponse();
-        $this->assertSame(404, $response->getStatusCode());
-        $this->assertSame('User not found', json_decode($response->getContent(), true)['message']);
+        $this->assertSame(401, $response->getStatusCode());
     }
     public function testCreateTodoSuccess(): void {
         $user = $this->createUser();
+        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
+        $token = $jwtManager->create($user);
+
         $payload = json_encode(['task' => 'wwwww']);
 
-        $this->client->request('POST', "/api/user/{$user->getId()}/todos", [], [], ['CONTENT_TYPE' => 'application/json'], $payload);
+        $this->client->request('POST', "/api/todos", [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+        ], $payload);
 
         $response = $this->client->getResponse();
         $this->assertSame(201, $response->getStatusCode());
