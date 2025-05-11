@@ -185,4 +185,25 @@ class HabitController extends AbstractController {
         $result = $this->habitService->markHabit($user->getId(), $habitId, $data);
         return $this->json($result['body'], $result['status']);
     }
+
+    #[Route('/api/habits/{habitId}', name: 'delete_user_habit', methods: ['DELETE'])]
+    #[IsGranted('ROLE_USER')]
+    public function deleteUserHabit(int $habitId): JsonResponse {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $result = $this->habitService->deleteUserHabit($user->getId(), $habitId);
+        return $this->json($result['body'], $result['status']);
+    }
+
+    #[Route('/api/habits/{habitId}/mark/{markId}', name: 'unmark_habit', methods: ['DELETE'])]
+    #[IsGranted('ROLE_USER')]
+    public function unmarkHabit(int $habitId, int $markId): JsonResponse {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $result = $this->habitService->unmarkHabit($user->getId(), $habitId, $markId);
+        return $this->json($result['body'], $result['status']);
+    }
+
 }
