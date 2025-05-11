@@ -91,6 +91,9 @@ div#login .footer a:hover {
     color: var(--accentDark) !important;
 }
 
+.error{
+
+}
 
 @media screen and (max-width: 743px) {
     div#login { border-radius: 0; margin: 0; max-width: 100%; border: none; box-shadow: none;}
