@@ -1,11 +1,14 @@
+// src/pages/Login.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import '../css/variables.css';
+import '../css/login.css';
 
-function Login() {
+export default function Login() {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [messages, setMessages] = useState([]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -14,38 +17,33 @@ function Login() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setError(null);
+        setMessages([]);
 
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/login', {
+            const res = await fetch('http://127.0.0.1:8000/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
             });
 
-            if (!response.ok) {
-                throw new Error('Błąd logowania');
+            const data = await res.json();
+            if (!res.ok) {
+                setMessages([data.message || 'Błąd logowania']);
+            } else {
+                localStorage.setItem('token', data.token);
+                navigate('/habits');
             }
-
-            const data = await response.json();
-            console.log('Zalogowano:', data);
-
-            // Save user session (example: save token)
-            localStorage.setItem('token', data.token);  // Save the token in localStorage
-
-            // Optionally, redirect to the homepage or dashboard
-            navigate('/');  // Adjust the redirect path as needed
-
         } catch (err) {
-            setError(err.message);
+            setMessages([err.message]);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div>
-            <h2>Logowanie</h2>
+        <div id="login">
+            <h1>Login</h1>
+
             <form onSubmit={handleSubmit}>
                 <input
                     type="email"
@@ -55,20 +53,32 @@ function Login() {
                     onChange={handleChange}
                     required
                 />
+
                 <input
                     type="password"
                     name="password"
-                    placeholder="Hasło"
+                    placeholder="Password"
                     value={formData.password}
                     onChange={handleChange}
                     required
                 />
-                <button type="submit" disabled={loading}>Zaloguj</button>
+
+                <div className="messages">
+                    {messages.map((msg, i) => (
+                        <p key={i}>{msg}</p>
+                    ))}
+                </div>
+
+                <button type="submit" disabled={loading}>
+                    {loading ? 'Logging in…' : 'Log In'}
+                </button>
             </form>
-            {loading && <p>Logowanie...</p>}
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+
+            <div className="footer">
+                <p>
+                    Don’t have an account? <a href="/register">Sign up</a>
+                </p>
+            </div>
         </div>
     );
 }
-
-export default Login;

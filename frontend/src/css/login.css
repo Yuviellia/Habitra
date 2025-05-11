@@ -1,0 +1,104 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background: var(--background);
+    color: var(--grayDark);
+    padding: 0;
+}
+
+div#login, div#login *{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+    color: var(--font);
+}
+div#login {
+    background: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px var(--border);
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+    margin: 30px auto;
+}
+div#login h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: var(--accent);
+}
+
+div#login > form> p {
+    text-align: left;
+    width :100%;
+    font-size: 1.1em;
+    color: #555;
+    margin-top: 20px;
+}
+div#login >div>p {
+    font-size: 1em;
+    color: #555;
+    margin-bottom: 20px;
+}
+div#login input[type="email"],
+div#login input[type="password"],
+div#login input[type="text"],
+div#login input[type="phone"],
+div#login button {
+    width: 100%;
+    background: white;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-size: 1em;
+    outline: none;
+}
+div#login input[type="email"]:focus,
+div#login input[type="password"]:focus,
+div#login input[type="text"]:focus,
+div#login input[type="phone"]:focus {
+    border-color: var(--accent);
+}
+div#login button {
+    background: var(--accent);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+div#login button:hover {
+    background: var(--accentDark);
+}
+div#login .footer {
+    margin-top: 20px;
+    font-size: 0.9em;
+    color: #555;
+}
+div#login .footer a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+div#login .footer a:hover {
+    text-decoration: underline;
+}
+.no-valid{
+    background-color: var(--accentLight) !important;
+    border-color: var(--accentDark) !important;
+    color: var(--accentDark) !important;
+}
+
+
+@media screen and (max-width: 743px) {
+    div#login { border-radius: 0; margin: 0; max-width: 100%; border: none; box-shadow: none;}
+    body { background-color: white; }
+}
+@media screen and (max-width: 523px){
+    div#login { padding-left: 10px; padding-right: 10px;}
+}
+
+
+
