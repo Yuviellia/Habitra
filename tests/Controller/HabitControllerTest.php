@@ -97,6 +97,9 @@ class HabitControllerTest extends WebTestCase {
 
     public function testMarkHabitInvalidDate(): void {
         $user = $this->createUser();
+        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
+        $token = $jwtManager->create($user);
+
         $habit = new Tag();
         $habit->setUser($user);
         $habit->setName('Run');
@@ -104,14 +107,20 @@ class HabitControllerTest extends WebTestCase {
         $this->em->persist($habit);
         $this->em->flush();
 
-        $this->client->request('POST', "/api/user/{$user->getId()}/habits/{$habit->getId()}/mark", [], [], ['CONTENT_TYPE'=>'application/json'], json_encode(['date'=>'invalid-date']));
+        $this->client->request('POST', "/api/habits/{$habit->getId()}/mark", [], [], [
+            'CONTENT_TYPE'=>'application/json',
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+        ], json_encode(['date'=>'invalid-date']));
         $response = $this->client->getResponse();
         $this->assertSame(400, $response->getStatusCode());
         $this->assertSame('Invalid date format', json_decode($response->getContent(), true)['message']);
     }
 
-    public function testMarkHabitUserMismatch(): void {
+    public function testMarkHabitUserHabit(): void {
         $user = $this->createUser('1@example.com');
+        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
+        $token = $jwtManager->create($user);
+
         $otherUser = $this->createUser('2@example.com');
         $otherUser->setEmail('ooo@example.com');
         $this->em->flush();
@@ -123,7 +132,10 @@ class HabitControllerTest extends WebTestCase {
         $this->em->persist($habit);
         $this->em->flush();
 
-        $this->client->request('POST', "/api/user/{$user->getId()}/habits/{$habit->getId()}/mark", [], [], ['CONTENT_TYPE'=>'application/json'], json_encode(['date'=>'2025-04-21']));
+        $this->client->request('POST', "/api/habits/{$habit->getId()}/mark", [], [], [
+            'CONTENT_TYPE'=>'application/json',
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+        ], json_encode(['date'=>'2025-04-21']));
         $response = $this->client->getResponse();
         $this->assertSame(404, $response->getStatusCode());
         $this->assertSame('Habit not found for this user', json_decode($response->getContent(), true)['message']);
@@ -131,6 +143,9 @@ class HabitControllerTest extends WebTestCase {
 
     public function testMarkHabitSuccess(): void {
         $user = $this->createUser();
+        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
+        $token = $jwtManager->create($user);
+
         $habit = new Tag();
         $habit->setUser($user);
         $habit->setName('Stretch');
@@ -138,7 +153,10 @@ class HabitControllerTest extends WebTestCase {
         $this->em->persist($habit);
         $this->em->flush();
 
-        $this->client->request('POST', "/api/user/{$user->getId()}/habits/{$habit->getId()}/mark", [], [], ['CONTENT_TYPE'=>'application/json'], json_encode(['date'=>'2025-04-21']));
+        $this->client->request('POST', "/api/habits/{$habit->getId()}/mark", [], [], [
+            'CONTENT_TYPE'=>'application/json',
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+        ], json_encode(['date'=>'2025-04-21']));
         $response = $this->client->getResponse();
         $this->assertSame(201, $response->getStatusCode());
         $data = json_decode($response->getContent(), true);
