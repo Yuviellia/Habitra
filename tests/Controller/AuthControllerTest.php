@@ -45,7 +45,7 @@ class AuthControllerTest extends WebTestCase {
         $response = $this->client->getResponse();
         $this->assertSame(400, $response->getStatusCode());
         $data = json_decode($response->getContent(), true);
-        $this->assertSame('Email and password required', $data['message']);
+        $this->assertSame('Invalid JSON.', $data['error']);
     }
 
     public function testLoginInvalidEmail(): void {
@@ -67,6 +67,7 @@ class AuthControllerTest extends WebTestCase {
         $user = new User();
         $user->setEmail('usercostam@example.com');
         $user->setPassword($this->hasher->hashPassword($user, 'haslo'));
+        $user->setRoles('ROLE_USER');
         $user->setUserDetails($details);
         $user->setEnabled(true);
         $user->setCreatedAt(new \DateTime());
@@ -94,6 +95,7 @@ class AuthControllerTest extends WebTestCase {
         $user = new User();
         $user->setEmail('usercostam@example.com');
         $user->setPassword($this->hasher->hashPassword($user, 'haslo'));
+        $user->setRoles('ROLE_USER');
         $user->setUserDetails($details);
         $user->setEnabled(true);
         $user->setCreatedAt(new \DateTime());
@@ -107,7 +109,7 @@ class AuthControllerTest extends WebTestCase {
         $this->assertSame(200, $response->getStatusCode());
         $data = json_decode($response->getContent(), true);
         print_r($data);
-        $this->assertSame('Login successful', $data['body']['message']);
+        $this->assertSame('Login successful', $data['message']);
         $this->assertArrayHasKey('token', $data);
     }
 
