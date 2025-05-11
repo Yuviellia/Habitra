@@ -80,4 +80,29 @@ class TodoService {
             ],
         ];
     }
+    public function deleteUserTodo(int $userId, int $todoId): array {
+        $todo = $this->todoRepository->find($todoId);
+
+        if (!$todo) {
+            return [
+                'status' => 404,
+                'body'   => ['message' => 'Todo not found'],
+            ];
+        }
+
+        if ($todo->getUser()->getId() !== $userId) {
+            return [
+                'status' => 403,
+                'body'   => ['message' => 'Unauthorized to delete this todo'],
+            ];
+        }
+
+        $this->entityManager->remove($todo);
+        $this->entityManager->flush();
+
+        return [
+            'status' => 200,
+            'body'   => ['message' => 'Todo deleted successfully'],
+        ];
+    }
 }

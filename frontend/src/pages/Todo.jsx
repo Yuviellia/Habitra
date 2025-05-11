@@ -7,15 +7,14 @@ function Todos() {
     const [refreshing, setRefreshing] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [notFound, setNotFound] = useState(false);
+    const [deleting, setDeleting] = useState({});
 
-    const getAuthToken = () => {
-        return localStorage.getItem('token');
-    };
+    const getAuthToken = () => localStorage.getItem('token');
 
     const fetchTodos = () => {
         setRefreshing(true);
-
         const token = getAuthToken();
+
         fetch(`http://127.0.0.1:8000/api/todos`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -24,7 +23,7 @@ function Todos() {
         })
             .then((res) => {
                 if (res.status === 404) {
-                    setTodos([]); // No todos found
+                    setTodos([]);
                     setNotFound(true);
                     return;
                 }
@@ -44,23 +43,19 @@ function Todos() {
             });
     };
 
-    useEffect(() => {
-        fetchTodos();
-    }, []);
+    useEffect(() => { fetchTodos(); }, []);
 
-    const refreshTodos = () => {
-        fetchTodos();
-    };
+    const refreshTodos = () => fetchTodos();
 
     const handleNewTodo = (e) => {
         e.preventDefault();
         setSubmitting(true);
-
         const token = getAuthToken();
+
         fetch(`http://127.0.0.1:8000/api/todos`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`, // Add Bearer token
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ task: newTodo }),
@@ -72,6 +67,27 @@ function Todos() {
                 setNotFound(false);
             })
             .finally(() => setSubmitting(false));
+    };
+
+    const handleDeleteTodo = (todoId) => {
+        if (!window.confirm("Czy na pewno chcesz usunąć to zadanie?")) return;
+        setDeleting((prev) => ({ ...prev, [todoId]: true }));
+        const token = getAuthToken();
+
+        fetch(`http://127.0.0.1:8000/api/todos/${todoId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        })
+            .then((res) => {
+                if (res.ok) {
+                    setTodos(todos.filter((t) => t.id !== todoId));
+                }
+            })
+            .finally(() => {
+                setDeleting((prev) => ({ ...prev, [todoId]: false }));
+            });
     };
 
     return (
@@ -98,8 +114,15 @@ function Todos() {
             {!notFound && todos.length > 0 && (
                 <ul>
                     {todos.map((todo) => (
-                        <li key={todo.id}>
+                        <li key={todo.id} style={{ marginBottom: '8px' }}>
                             <strong>{todo.task}</strong> (Dodano: {todo.createdAt})
+                            <button
+                                onClick={() => handleDeleteTodo(todo.id)}
+                                disabled={deleting[todo.id]}
+                                style={{ marginLeft: '10px', color: 'red' }}
+                            >
+                                {deleting[todo.id] ? 'Usuwanie...' : 'Usuń'}
+                            </button>
                         </li>
                     ))}
                 </ul>

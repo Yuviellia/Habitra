@@ -106,4 +106,30 @@ class TodoController extends AbstractController {
         $result = $this->todoService->createUserTodo($user->getId(), $data);
         return $this->json($result['body'], $result['status']);
     }
+
+    #[Route('/api/todos/{id}', name: 'delete_user_todo', methods: ['DELETE'])]
+    #[OA\Delete(
+        path: '/api/todos/{id}',
+        summary: 'Delete a todo for the user',
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'ID of the todo to delete',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Todo deleted successfully'),
+            new OA\Response(response: 403, description: 'Unauthorized to delete this todo'),
+            new OA\Response(response: 404, description: 'Todo not found')
+        ]
+    )]
+    public function deleteUserTodo(int $id): JsonResponse {
+        $user = $this->getUser();
+        $result = $this->todoService->deleteUserTodo($user->getId(), $id);
+        return $this->json($result['body'], $result['status']);
+    }
+
 }
