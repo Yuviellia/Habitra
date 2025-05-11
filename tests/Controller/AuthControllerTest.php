@@ -6,7 +6,6 @@ use App\Entity\UserDetails;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 
 class AuthControllerTest extends WebTestCase {
     private $client;
@@ -20,12 +19,7 @@ class AuthControllerTest extends WebTestCase {
         $this->em    = self::getContainer()->get(EntityManagerInterface::class);
         $this->hasher= self::getContainer()->get(UserPasswordHasherInterface::class);
 
-        $mockJwtManager = $this->createMock(JWTTokenManagerInterface::class);
-        $mockJwtManager->method('create')->willReturn('test-token');
-        $container->set(JWTTokenManagerInterface::class, $mockJwtManager);
-
         $conn = $this->em->getConnection();
-
         $schemaManager = $conn->createSchemaManager();
         $tables = $schemaManager->listTableNames();
 
