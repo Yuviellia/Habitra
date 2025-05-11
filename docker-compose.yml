@@ -7,6 +7,7 @@ services:
     container_name: symfony_php
     volumes:
       - .:/var/www/html
+      - ./config/jwt:/var/www/html/config/jwt
     depends_on:
       - database
 

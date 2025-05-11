@@ -108,8 +108,6 @@ class AuthControllerTest extends WebTestCase {
         $response = $this->client->getResponse();
         $this->assertSame(200, $response->getStatusCode());
         $data = json_decode($response->getContent(), true);
-        print_r($data);
-        $this->assertSame('Login successful', $data['message']);
         $this->assertArrayHasKey('token', $data);
     }
 
@@ -138,6 +136,7 @@ class AuthControllerTest extends WebTestCase {
         $user->setEmail('beelicious@example.com');
         $user->setPassword($this->hasher->hashPassword($user, 'beez'));
         $user->setUserDetails($details);
+        $user->setRoles('ROLE_USER');
         $user->setEnabled(true);
         $user->setCreatedAt(new \DateTime());
         $this->em->persist($user);

@@ -119,6 +119,9 @@ class AuthController extends AbstractController {
     )]
     public function register(Request $request): JsonResponse {
         $data = json_decode($request->getContent(), true);
+        if (!is_array($data) || empty($data['name']) || empty($data['surname']) || empty($data['email']) || empty($data['password'])) {
+            return $this->json(['message' => 'Name, surname, email, and password required'], 400);
+        }
         $result = $this->authService->register($data);
         return $this->json($result['body'], $result['status']);
     }

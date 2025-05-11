@@ -89,6 +89,7 @@ class AuthService {
         $user->setEmail($data['email'])
             ->setPassword($hashed)
             ->setUserDetails($userDetails)
+            ->setRoles('ROLE_USER')
             ->setEnabled(true)
             ->setCreatedAt(new \DateTime());
 
