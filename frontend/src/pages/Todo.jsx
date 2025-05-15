@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import '../css/variables.css';
+import '../css/main.css';
+import Clock from '../components/Clock';
 
 function Todos() {
     const [todos, setTodos] = useState([]);
     const [newTodo, setNewTodo] = useState('');
-    const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [notFound, setNotFound] = useState(false);
@@ -14,55 +16,43 @@ function Todos() {
     const fetchTodos = () => {
         setRefreshing(true);
         const token = getAuthToken();
-
-        fetch(`http://127.0.0.1:8000/api/todos`, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
+        fetch('http://127.0.0.1:8000/api/todos', {
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         })
-            .then((res) => {
+            .then(res => {
                 if (res.status === 404) {
                     setTodos([]);
                     setNotFound(true);
-                    return;
+                    return null;
                 }
                 if (!res.ok) throw new Error('Błąd pobierania listy zadań');
                 return res.json();
             })
-            .then((data) => {
+            .then(data => {
                 if (data) {
-                    setTodos(data);
+                    setTodos(Array.isArray(data) ? data : data.todos || []);
                     setNotFound(false);
                 }
             })
             .catch(() => setNotFound(true))
-            .finally(() => {
-                setLoading(false);
-                setRefreshing(false);
-            });
+            .finally(() => setRefreshing(false));
     };
 
     useEffect(() => { fetchTodos(); }, []);
-
     const refreshTodos = () => fetchTodos();
 
     const handleNewTodo = (e) => {
         e.preventDefault();
         setSubmitting(true);
         const token = getAuthToken();
-
-        fetch(`http://127.0.0.1:8000/api/todos`, {
+        fetch('http://127.0.0.1:8000/api/todos', {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ task: newTodo }),
         })
-            .then((res) => res.json())
-            .then((data) => {
-                setTodos([...todos, data.todo]);
+            .then(res => res.json())
+            .then(data => {
+                setTodos(prev => [...prev, data.todo || data]);
                 setNewTodo('');
                 setNotFound(false);
             })
@@ -70,64 +60,67 @@ function Todos() {
     };
 
     const handleDeleteTodo = (todoId) => {
-        if (!window.confirm("Czy na pewno chcesz usunąć to zadanie?")) return;
-        setDeleting((prev) => ({ ...prev, [todoId]: true }));
+        setDeleting(prev => ({ ...prev, [todoId]: true }));
         const token = getAuthToken();
-
         fetch(`http://127.0.0.1:8000/api/todos/${todoId}`, {
             method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
         })
-            .then((res) => {
+            .then(res => {
                 if (res.ok) {
-                    setTodos(todos.filter((t) => t.id !== todoId));
+                    setTodos(prev => prev.filter(t => t.id !== todoId));
                 }
             })
-            .finally(() => {
-                setDeleting((prev) => ({ ...prev, [todoId]: false }));
-            });
+            .finally(() => setDeleting(prev => ({ ...prev, [todoId]: false })));
     };
 
     return (
-        <div>
-            <h2>Twoje Zadania</h2>
+        <>
 
-            <button onClick={refreshTodos} disabled={refreshing}>
-                {refreshing ? 'Odświeżanie...' : 'Odśwież'}
-            </button>
+            <div id="header" className="section">
+                <h1>Habitra</h1>
+                <Clock />
+            </div>
 
-            <form onSubmit={handleNewTodo}>
-                <input
-                    type="text"
-                    placeholder="Nowe zadanie"
-                    value={newTodo}
-                    onChange={(e) => setNewTodo(e.target.value)}
-                    required
-                />
-                <button type="submit" disabled={submitting}>
-                    {submitting ? 'Dodawanie...' : 'Dodaj zadanie'}
+            <div id="todo-section" className="section">
+                <h2>To Do List</h2>
+                <button onClick={refreshTodos} disabled={refreshing}>
+                    {refreshing ? 'Odświeżanie...' : 'Odśwież'}
                 </button>
-            </form>
 
-            {!notFound && todos.length > 0 && (
-                <ul>
-                    {todos.map((todo) => (
-                        <li key={todo.id} style={{ marginBottom: '8px' }}>
-                            <strong>{todo.task}</strong> (Dodano: {todo.createdAt})
-                            <button
-                                onClick={() => handleDeleteTodo(todo.id)}
-                                disabled={deleting[todo.id]}
-                                style={{ marginLeft: '10px', color: 'red' }}
-                            >
-                                {deleting[todo.id] ? 'Usuwanie...' : 'Usuń'}
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            )}
-        </div>
+                {!notFound && todos.length > 0 && (
+                    <ul className="task-list">
+                        {todos.map(todo => (
+                            <li key={todo.id} style={{ marginBottom: '8px' }}>
+                                <span>{todo.task}</span>
+                                <button
+                                    onClick={() => handleDeleteTodo(todo.id)}
+                                    disabled={deleting[todo.id]}
+                                    className="submit-button"
+                                >
+                                    <i className="fa-solid fa-trash"></i>
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+
+
+                <form onSubmit={handleNewTodo} className="add-container">
+                    <input
+                        type="text"
+                        placeholder="Add a new task..."
+                        className="task-input"
+                        value={newTodo}
+                        onChange={e => setNewTodo(e.target.value)}
+                        required
+                    />
+                    <button type="submit" className="submit-button" disabled={submitting}>
+                        <i className="fa-solid fa-plus"></i>
+                    </button>
+                </form>
+            </div>
+        </>
     );
 }
 

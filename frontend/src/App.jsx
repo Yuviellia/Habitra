@@ -21,61 +21,62 @@ function AppWrapper() {
 
     return (
         <>
-            {showNav && (
-                <nav>
-                    <Link to="/habits">Habits</Link> |
-                    <Link to="/todo">Todo</Link> |
-                    <Link to="/users">Users</Link> |
-                    <Link to="/logout">Logout</Link>
-                </nav>
-            )}
+            <div className="container">
+                {showNav && (
+                    <nav className="navbar">
+                        <Link to="/todo">To Do List</Link>
+                        <Link to="/habits">Habit Tracker</Link>
+                        <Link to="/users">Users</Link>
+                        <Link to="/logout">Logout</Link>
+                    </nav>
+                )}
 
-            <Routes>
-                <Route path="/" element={
-                    token ? <Navigate to="/habits" replace /> : <Navigate to="/login" replace />
-                } />
+                <Routes>
+                    <Route path="/" element={
+                        token ? <Navigate to="/habits" replace/> : <Navigate to="/login" replace/>
+                    }/>
 
-                <Route path="/login" element={
-                    <GuestRoute>
-                        <Login />
-                    </GuestRoute>
-                } />
-                <Route path="/register" element={
-                    <GuestRoute>
-                        <Register />
-                    </GuestRoute>
-                } />
+                    <Route path="/login" element={
+                        <GuestRoute>
+                            <Login/>
+                        </GuestRoute>
+                    }/>
+                    <Route path="/register" element={
+                        <GuestRoute>
+                            <Register/>
+                        </GuestRoute>
+                    }/>
 
-                <Route path="/logout" element={
-                    <PrivateRoute>
-                        <Logout />
-                    </PrivateRoute>
-                } />
-                <Route path="/habits" element={
-                    <PrivateRoute>
-                        <Habits />
-                    </PrivateRoute>
-                } />
-                <Route path="/todo" element={
-                    <PrivateRoute>
-                        <Todo />
-                    </PrivateRoute>
-                } />
-                <Route path="/users" element={
-                    <PrivateRoute>
-                        <Users />
-                    </PrivateRoute>
-                } />
-                <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-        </>
-    );
-}
+                    <Route path="/logout" element={
+                        <PrivateRoute>
+                            <Logout/>
+                        </PrivateRoute>
+                    }/>
+                    <Route path="/habits" element={
+                        <PrivateRoute>
+                            <Habits/>
+                        </PrivateRoute>
+                    }/>
+                    <Route path="/todo" element={
+                        <PrivateRoute>
+                            <Todo/>
+                        </PrivateRoute>
+                    }/>
+                    <Route path="/users" element={
+                        <PrivateRoute>
+                            <Users/>
+                        </PrivateRoute>
+                    }/>
+                    <Route path="*" element={<Navigate to="/" replace/>}/>
+                </Routes>
+        </div></>
+            );
+            }
 
-export default function App() {
-    return (
-        <Router>
+            export default function App() {
+            return (
+            <Router>
             <AppWrapper />
-        </Router>
-    );
-}
+            </Router>
+            );
+        }

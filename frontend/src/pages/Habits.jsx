@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Clock from '../components/Clock';
 import '../css/variables.css';
 import '../css/main.css';
 
@@ -11,21 +12,6 @@ function Habits() {
     const [marking, setMarking] = useState({});
     const [clock, setClock] = useState({ hours: '--', minutes: '--', period: '--' });
     const [weekOffset, setWeekOffset] = useState(0);
-
-    // Clock logic
-    useEffect(() => {
-        const updateClock = () => {
-            const now = new Date();
-            let hours = now.getHours();
-            const period = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12 || 12;
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            setClock({ hours, minutes, period });
-        };
-        updateClock();
-        const interval = setInterval(updateClock, 1000);
-        return () => clearInterval(interval);
-    }, []);
 
     const getAuthToken = () => localStorage.getItem('token');
 
@@ -135,20 +121,11 @@ function Habits() {
     const monday = getMondayFromOffset(weekOffset);
 
     return (
-        <div className="container">
-            <nav className="navbar">
-                <a href="/todo">To Do List</a>
-                <a href="/dashboard">Habit Tracker</a>
-                <a href="/logout">Logout</a>
-            </nav>
+        <>
 
             <div id="header" className="section">
-                <h1>Rutio</h1>
-                <div className="clock">
-                    <span id="hours">{clock.hours}</span>:
-                    <span id="minutes">{clock.minutes}</span>
-                    <span id="period">{clock.period}</span>
-                </div>
+                <h1>Habitra</h1>
+                <Clock />
             </div>
 
             <div id="habit-table-section" className="section">
@@ -256,7 +233,7 @@ function Habits() {
                     </tbody>
                 </table>
             </div>
-        </div>
+        </>
     );
 }
 
