@@ -93,6 +93,7 @@ table tr:hover .fa-trash, .task-list li:hover .fa-trash, table tr:hover .fa-plus
     font-weight: 500;
     letter-spacing: 0.5px;
     transition: color 0.3s ease;
+    cursor: pointer;
 }
 
 .navbar a:hover {

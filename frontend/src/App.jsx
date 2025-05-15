@@ -3,10 +3,10 @@ import Register from './pages/Register';
 import Login from './pages/Login';
 import Habits from './pages/Habits';
 import Todo from './pages/Todo';
-import Logout from "./pages/Logout";
 import Users from "./pages/Users";
 import GuestRoute from './components/GuestRoute';
 import PrivateRoute from './components/PrivateRoute';
+import LogoutButton from './components/LogoutButton';
 import { useEffect, useState } from 'react';
 
 function AppWrapper() {
@@ -27,7 +27,7 @@ function AppWrapper() {
                         <Link to="/todo">To Do List</Link>
                         <Link to="/habits">Habit Tracker</Link>
                         <Link to="/users">Users</Link>
-                        <Link to="/logout">Logout</Link>
+                        <LogoutButton />
                     </nav>
                 )}
 
@@ -45,12 +45,6 @@ function AppWrapper() {
                         <GuestRoute>
                             <Register/>
                         </GuestRoute>
-                    }/>
-
-                    <Route path="/logout" element={
-                        <PrivateRoute>
-                            <Logout/>
-                        </PrivateRoute>
                     }/>
                     <Route path="/habits" element={
                         <PrivateRoute>
