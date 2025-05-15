@@ -7,24 +7,27 @@ use App\Entity\Marked;
 use App\Repository\HabitRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
-class HabitService {
+class HabitService
+{
     private HabitRepository $habitRepository;
     private EntityManagerInterface $entityManager;
 
     public function __construct(
-        HabitRepository $habitRepository,
+        HabitRepository        $habitRepository,
         EntityManagerInterface $entityManager
-    ) {
+    )
+    {
         $this->habitRepository = $habitRepository;
         $this->entityManager = $entityManager;
     }
 
-    public function getUserHabits(int $userId): array {
+    public function getUserHabits(int $userId): array
+    {
         $habits = $this->habitRepository->getHabitsByUserId($userId);
         if (empty($habits)) {
             return [
                 'status' => 404,
-                'body'   => ['message' => 'No habits found for this user'],
+                'body' => ['message' => 'No habits found for this user'],
             ];
         }
 
@@ -33,29 +36,30 @@ class HabitService {
             $markedDates = [];
             foreach ($habit->getMarkedDates() as $marked) {
                 $markedDates[] = [
-                    'id'   => $marked->getId(),
+                    'id' => $marked->getId(),
                     'date' => $marked->getDate()->format('Y-m-d'),
                 ];
             }
             $data[] = [
-                'id'           => $habit->getId(),
-                'name'         => $habit->getName(),
-                'created_at'   => $habit->getCreatedAt()->format('Y-m-d H:i:s'),
+                'id' => $habit->getId(),
+                'name' => $habit->getName(),
+                'created_at' => $habit->getCreatedAt()->format('Y-m-d H:i:s'),
                 'marked_dates' => $markedDates,
             ];
         }
 
         return [
             'status' => 200,
-            'body'   => $data,
+            'body' => $data,
         ];
     }
 
-    public function createUserHabit(int $userId, array $data): array {
+    public function createUserHabit(int $userId, array $data): array
+    {
         if (empty($data['name'])) {
             return [
                 'status' => 400,
-                'body'   => ['message' => 'Habit name is required'],
+                'body' => ['message' => 'Habit name is required'],
             ];
         }
 
@@ -63,7 +67,7 @@ class HabitService {
         if (!$user) {
             return [
                 'status' => 404,
-                'body'   => ['message' => 'User not found'],
+                'body' => ['message' => 'User not found'],
             ];
         }
 
@@ -77,24 +81,25 @@ class HabitService {
 
         return [
             'status' => 201,
-            'body'   => [
+            'body' => [
                 'message' => 'Habit created',
-                'habit'   => [
-                    'id'         => $habit->getId(),
-                    'name'       => $habit->getName(),
+                'habit' => [
+                    'id' => $habit->getId(),
+                    'name' => $habit->getName(),
                     'created_at' => $habit->getCreatedAt()->format('Y-m-d H:i:s'),
                 ],
             ],
         ];
     }
 
-    public function deleteUserHabit(int $userId, int $habitId): array {
+    public function deleteUserHabit(int $userId, int $habitId): array
+    {
         $habit = $this->habitRepository->find($habitId);
 
         if (!$habit || $habit->getUser()->getId() !== $userId) {
             return [
                 'status' => 404,
-                'body'   => ['message' => 'Habit not found for this user'],
+                'body' => ['message' => 'Habit not found for this user'],
             ];
         }
 
@@ -107,7 +112,7 @@ class HabitService {
 
         return [
             'status' => 200,
-            'body'   => ['message' => 'Habit and all associated marks deleted'],
+            'body' => ['message' => 'Habit and all associated marks deleted'],
         ];
     }
 
@@ -115,7 +120,7 @@ class HabitService {
         if (empty($data['date'])) {
             return [
                 'status' => 400,
-                'body'   => ['message' => 'Marked date is required'],
+                'body' => ['message' => 'Marked date is required'],
             ];
         }
 
@@ -123,7 +128,7 @@ class HabitService {
         if (!$user) {
             return [
                 'status' => 404,
-                'body'   => ['message' => 'User not found'],
+                'body' => ['message' => 'User not found'],
             ];
         }
 
@@ -131,19 +136,40 @@ class HabitService {
         if (!$habit || $habit->getUser()->getId() !== $userId) {
             return [
                 'status' => 404,
-                'body'   => ['message' => 'Habit not found for this user'],
+                'body' => ['message' => 'Habit not found for this user'],
             ];
         }
 
         try {
             $date = new \DateTime($data['date']);
+            $date->setTime(0, 0, 0); // Ensure consistent comparison (ignore time)
         } catch (\Exception $e) {
             return [
                 'status' => 400,
-                'body'   => ['message' => 'Invalid date format'],
+                'body' => ['message' => 'Invalid date format'],
             ];
         }
 
+        // Check if a Marked entry already exists for this habit + date
+        $markedRepo = $this->entityManager->getRepository(Marked::class);
+        $existing = $markedRepo->findOneBy([
+            'tag' => $habit,
+            'date' => $date,
+        ]);
+
+        if ($existing) {
+            // Delete the existing mark
+            $this->entityManager->remove($existing);
+            $this->entityManager->flush();
+
+            return [
+                'status' => 200,
+                'body' => ['message' => 'Marked date removed'],
+                'removed' => ['date' => $date->format('Y-m-d')],
+            ];
+        }
+
+        // Else, add new mark
         $marked = new Marked();
         $marked->setTag($habit)
             ->setDate($date);
@@ -153,41 +179,13 @@ class HabitService {
 
         return [
             'status' => 201,
-            'body'   => [
+            'body' => [
                 'message' => 'Habit marked for date',
-                'marked'  => [
-                    'id'   => $marked->getId(),
+                'marked' => [
+                    'id' => $marked->getId(),
                     'date' => $marked->getDate()->format('Y-m-d'),
                 ],
             ],
-        ];
-    }
-    public function unmarkHabit(int $userId, int $habitId, int $markId): array {
-        $habit = $this->habitRepository->find($habitId);
-
-        if (!$habit || $habit->getUser()->getId() !== $userId) {
-            return [
-                'status' => 404,
-                'body'   => ['message' => 'Habit not found for this user'],
-            ];
-        }
-
-        $markedRepo = $this->entityManager->getRepository(Marked::class);
-        $marked = $markedRepo->find($markId);
-
-        if (!$marked || $marked->getTag()->getId() !== $habitId) {
-            return [
-                'status' => 404,
-                'body'   => ['message' => 'Marked date not found for this habit'],
-            ];
-        }
-
-        $this->entityManager->remove($marked);
-        $this->entityManager->flush();
-
-        return [
-            'status' => 200,
-            'body'   => ['message' => 'Marked date deleted'],
         ];
     }
 }

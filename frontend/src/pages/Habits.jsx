@@ -1,46 +1,46 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import '../css/variables.css';
+import '../css/main.css';
 
 function Habits() {
     const [tags, setTags] = useState([]);
     const [newTag, setNewTag] = useState('');
-    const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const [notFound, setNotFound] = useState(false);
-    const [marking, setMarking] = useState({});
     const [deleting, setDeleting] = useState({});
+    const [marking, setMarking] = useState({});
+    const [clock, setClock] = useState({ hours: '--', minutes: '--', period: '--' });
+    const [weekOffset, setWeekOffset] = useState(0);
 
-    const getAuthToken = () => localStorage.getItem("token");
+    // Clock logic
+    useEffect(() => {
+        const updateClock = () => {
+            const now = new Date();
+            let hours = now.getHours();
+            const period = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            setClock({ hours, minutes, period });
+        };
+        updateClock();
+        const interval = setInterval(updateClock, 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const getAuthToken = () => localStorage.getItem('token');
 
     const fetchHabits = () => {
         setRefreshing(true);
         const token = getAuthToken();
-        fetch(`http://127.0.0.1:8000/api/habits`, {
+        fetch('http://127.0.0.1:8000/api/habits', {
             headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
         })
-            .then((res) => {
-                if (res.status === 404) {
-                    setTags([]);
-                    setNotFound(true);
-                    return;
-                }
-                if (!res.ok) throw new Error('Błąd pobierania nawyków');
-                return res.json();
-            })
-            .then((data) => {
-                if (data) {
-                    setTags(data);
-                    setNotFound(false);
-                }
-            })
-            .catch(() => setNotFound(true))
-            .finally(() => {
-                setLoading(false);
-                setRefreshing(false);
-            });
+            .then((res) => res.json())
+            .then((data) => setTags(data || []))
+            .finally(() => setRefreshing(false));
     };
 
     useEffect(() => {
@@ -49,177 +49,213 @@ function Habits() {
 
     const refreshHabits = () => fetchHabits();
 
+    const handleNewTag = (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+        const token = getAuthToken();
+        fetch('http://127.0.0.1:8000/api/habits', {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name: newTag }),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                setTags((prev) => [...prev, { ...data.habit, marked_dates: [] }]);
+                setNewTag('');
+            })
+            .finally(() => setSubmitting(false));
+    };
+
     const handleMarkDate = (habitId, date) => {
         setMarking((prev) => ({ ...prev, [habitId]: true }));
         const token = getAuthToken();
         fetch(`http://127.0.0.1:8000/api/habits/${habitId}/mark`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify({ date }),
         })
             .then((res) => res.json())
             .then((data) => {
-                setTags(tags.map(tag =>
-                    tag.id === habitId
-                        ? { ...tag, marked_dates: [...tag.marked_dates, data.marked] }
-                        : tag
-                ));
+                setTags((prev) =>
+                    prev.map((tag) => {
+                        if (tag.id !== habitId) return tag;
+                        if (data.marked) {
+                            return {
+                                ...tag,
+                                marked_dates: [...tag.marked_dates, data.marked],
+                            };
+                        } else {
+                            return {
+                                ...tag,
+                                marked_dates: tag.marked_dates.filter((m) => m.date !== date),
+                            };
+                        }
+                    })
+                );
             })
             .finally(() => setMarking((prev) => ({ ...prev, [habitId]: false })));
     };
 
-    const handleNewTag = (e) => {
-        e.preventDefault();
-        setSubmitting(true);
-        const token = getAuthToken();
-        fetch(`http://127.0.0.1:8000/api/habits`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name: newTag }),
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                setTags([...tags, { ...data.habit, marked_dates: [] }]);
-                setNewTag('');
-                setNotFound(false);
-            })
-            .finally(() => setSubmitting(false));
-    };
-
-    const handleDeleteMark = (habitId, markId) => {
-        if (!window.confirm("Czy na pewno chcesz usunąć to oznaczenie?")) return;
-        setDeleting((prev) => ({ ...prev, [`mark-${markId}`]: true }));
-        const token = getAuthToken();
-
-        fetch(`http://127.0.0.1:8000/api/habits/${habitId}/mark/${markId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-            }
-        })
-            .then((res) => {
-                if (res.ok) {
-                    setTags(tags.map(tag =>
-                        tag.id === habitId
-                            ? {
-                                ...tag,
-                                marked_dates: tag.marked_dates.filter(m => m.id !== markId)
-                            }
-                            : tag
-                    ));
-                }
-            })
-            .finally(() => setDeleting((prev) => ({ ...prev, [`mark-${markId}`]: false })));
-    };
-
     const handleDeleteHabit = (habitId) => {
-        if (!window.confirm("Czy na pewno chcesz usunąć ten nawyk?")) return;
         setDeleting((prev) => ({ ...prev, [habitId]: true }));
         const token = getAuthToken();
         fetch(`http://127.0.0.1:8000/api/habits/${habitId}`, {
             method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+            headers: { Authorization: `Bearer ${token}` },
         })
-            .then((res) => {
-                if (res.ok) {
-                    setTags(tags.filter(tag => tag.id !== habitId));
-                }
+            .then((res) => res.json().then((body) => ({ ok: res.ok, body })))
+            .then(({ ok, body }) => {
+                if (ok) setTags((prev) => prev.filter((t) => t.id !== habitId));
+                else alert(body.message || 'Error deleting habit');
             })
             .finally(() => setDeleting((prev) => ({ ...prev, [habitId]: false })));
     };
 
-    const handleDeleteAllMarks = (habitId) => {
-        if (!window.confirm("Czy na pewno chcesz usunąć wszystkie oznaczenia tego nawyku?")) return;
-        setDeleting((prev) => ({ ...prev, [`marks-${habitId}`]: true }));
-        const token = getAuthToken();
-        fetch(`http://127.0.0.1:8000/api/habits/${habitId}/marks`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        })
-            .then((res) => {
-                if (res.ok) {
-                    setTags(tags.map(tag =>
-                        tag.id === habitId ? { ...tag, marked_dates: [] } : tag
-                    ));
-                }
-            })
-            .finally(() => setDeleting((prev) => ({ ...prev, [`marks-${habitId}`]: false })));
+    const toLocalISODate = (date) => {
+        const offset = date.getTimezoneOffset();
+        const local = new Date(date.getTime() - offset * 60 * 1000);
+        return local.toISOString().split('T')[0];
     };
 
+    const getMondayFromOffset = (offset) => {
+        const now = new Date();
+        const currentDay = now.getDay();
+        const diff = now.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
+        const monday = new Date(now.setDate(diff + offset * 7));
+        monday.setHours(0, 0, 0, 0);
+        return monday;
+    };
+
+    const monday = getMondayFromOffset(weekOffset);
+
     return (
-        <div>
-            <h2>Twoje Nawyki</h2>
+        <div className="container">
+            <nav className="navbar">
+                <a href="/todo">To Do List</a>
+                <a href="/dashboard">Habit Tracker</a>
+                <a href="/logout">Logout</a>
+            </nav>
 
-            <button onClick={refreshHabits} disabled={refreshing}>
-                {refreshing ? 'Odświeżanie...' : 'Odśwież'}
-            </button>
+            <div id="header" className="section">
+                <h1>Rutio</h1>
+                <div className="clock">
+                    <span id="hours">{clock.hours}</span>:
+                    <span id="minutes">{clock.minutes}</span>
+                    <span id="period">{clock.period}</span>
+                </div>
+            </div>
 
-            <form onSubmit={handleNewTag}>
-                <input
-                    type="text"
-                    placeholder="Nazwa nowego tagu"
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    required
-                />
-                <button type="submit" disabled={submitting}>
-                    {submitting ? 'Dodawanie...' : 'Dodaj tag'}
+            <div id="habit-table-section" className="section">
+                <h2>Habit Tracker</h2>
+                <button onClick={refreshHabits} disabled={refreshing}>
+                    {refreshing ? 'Odświeżanie...' : 'Odśwież'}
                 </button>
-            </form>
+                <h3>
+                    <a
+                        href="#"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setWeekOffset((prev) => prev - 1);
+                        }}
+                    >
+                        &lt;
+                    </a>
+                    {' '}
+                    {monday.toLocaleDateString('pl-PL')}
+                    {' '}
+                    <a
+                        href="#"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setWeekOffset((prev) => prev + 1);
+                        }}
+                    >
+                        &gt;
+                    </a>
+                </h3>
 
-            {!notFound && tags.length > 0 && (
-                <ul>
-                    {tags.map(tag => (
-                        <li key={tag.id}>
-                            <strong>{tag.name}</strong> (Utworzono: {tag.created_at})
-                            <ul>
-                                {tag.marked_dates?.map(mark => (
-                                    <li key={mark.id}>
-                                        {mark.date}
+                <table>
+                    <thead>
+                    <tr>
+                        <th className="task-column">Task</th>
+                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
+                            <th key={d} className="day-column">{d}</th>
+                        ))}
+                        <th className="progress-column">Progress</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {tags.map((tag) => {
+                        let marksThisWeek = 0;
+                        return (
+                            <tr key={tag.id}>
+                                <td className="task-column">
+                                    <div className="task-cell">
+                                        <span>{tag.name}</span>
                                         <button
-                                            onClick={() => handleDeleteMark(tag.id, mark.id)}
-                                            disabled={deleting[`mark-${mark.id}`]}
-                                            style={{marginLeft: '8px', color: 'red'}}
+                                            onClick={() => handleDeleteHabit(tag.id)}
+                                            className="submit-button"
+                                            disabled={deleting[tag.id]}
                                         >
-                                            {deleting[`mark-${mark.id}`] ? 'Usuwanie...' : 'Usuń'}
+                                            <i className="fa-solid fa-trash"></i>
                                         </button>
-                                    </li>
-                                ))}
-                            </ul>
-                            <form
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    const date = e.target.elements.date.value;
-                                    handleMarkDate(tag.id, date);
-                                }}
-                            >
-                                <input type="date" name="date" required/>
-                                <button type="submit" disabled={marking[tag.id]}>
-                                    {marking[tag.id] ? 'Oznaczanie...' : 'Dodaj oznaczenie'}
+                                    </div>
+                                </td>
+                                {Array.from({ length: 7 }).map((_, idx) => {
+                                    const date = new Date(monday);
+                                    date.setDate(monday.getDate() + idx);
+                                    const iso = toLocalISODate(date);
+                                    const isChecked = tag.marked_dates.some((m) => m.date === iso);
+                                    if (isChecked) marksThisWeek++;
+                                    return (
+                                        <td key={idx} className="day-column">
+                                            <input
+                                                type="checkbox"
+                                                checked={isChecked}
+                                                disabled={marking[tag.id]}
+                                                onChange={() => handleMarkDate(tag.id, iso)}
+                                            />
+                                        </td>
+                                    );
+                                })}
+                                <td className="progress-column">
+                                    <div className="progress">
+                                        <div
+                                            className="progress-bar"
+                                            style={{ width: `${(marksThisWeek / 7) * 100}%` }}
+                                        ></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        );
+                    })}
+                    <tr>
+                        <td colSpan="9">
+                            <form onSubmit={handleNewTag} className="add-container">
+                                <input
+                                    name="tag"
+                                    type="text"
+                                    placeholder="Add a new tag..."
+                                    className="task-input"
+                                    value={newTag}
+                                    onChange={(e) => setNewTag(e.target.value)}
+                                    required
+                                />
+                                <button type="submit" className="submit-button" disabled={submitting}>
+                                    <i className="fa-solid fa-plus"></i>
                                 </button>
                             </form>
-
-                            <button
-                                onClick={() => handleDeleteHabit(tag.id)}
-                                disabled={deleting[tag.id]}
-                                style={{color: 'red', marginTop: '5px'}}
-                            >
-                                {deleting[tag.id] ? 'Usuwanie...' : 'Usuń nawyk'}
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            )}
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }
