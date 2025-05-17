@@ -12,17 +12,20 @@ class AuthService {
     private EntityManagerInterface $entityManager;
     private UserPasswordHasherInterface $passwordHasher;
     private JwtManager $jwtManager;
+    private MessageSender $messageSender;
 
     public function __construct(
         UserRepository $userRepository,
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
-        JwtManager $jwtManager
+        JwtManager $jwtManager,
+        MessageSender $messageSender
     ) {
         $this->userRepository = $userRepository;
         $this->entityManager = $entityManager;
         $this->passwordHasher = $passwordHasher;
         $this->jwtManager = $jwtManager;
+        $this->messageSender = $messageSender;
     }
 
     public function login(array $data): array {
@@ -97,6 +100,7 @@ class AuthService {
         $this->entityManager->flush();
 
         $token = $this->jwtManager->create($user);
+        $this->messageSender->send("Nowy uzytkownik: {$user->getEmail()}");
 
         return [
             'status' => 201,

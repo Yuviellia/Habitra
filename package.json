@@ -19,8 +19,26 @@
     },
     "dependencies": {
         "@babel/preset-react": "^7.26.3",
+        "amqplib": "^0.10.8",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "react-router-dom": "^7.4.1"
-    }
+    },
+    "name": "habitra",
+    "version": "1.0.0",
+    "main": "webpack.config.js",
+    "directories": {
+        "test": "tests"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Yuviellia/Habitra.git"
+    },
+    "keywords": [],
+    "author": "",
+    "bugs": {
+        "url": "https://github.com/Yuviellia/Habitra/issues"
+    },
+    "homepage": "https://github.com/Yuviellia/Habitra#readme",
+    "description": ""
 }
