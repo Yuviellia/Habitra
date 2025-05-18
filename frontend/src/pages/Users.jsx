@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import Clock from "../components/Clock.jsx";
 
 function Users() {
     const [users, setUsers] = useState([]);
@@ -53,27 +54,55 @@ function Users() {
     }, []);
 
     return (
-        <div>
-            <h2>Lista Użytkowników</h2>
-            <button onClick={fetchUsers} disabled={refreshing}>
-                {refreshing ? 'Odświeżanie...' : 'Odśwież'}
-            </button>
+        <>
+            <div id="header" className="section">
+                <h1>Habitra</h1>
+                <Clock/>
+            </div>
+            <div id="todo-section" className="section">
+                <h2>User List &nbsp;
+                    <i
+                        onClick={!refreshing ? fetchUsers : undefined}
+                        className={`fa-solid fa-arrows-rotate ${refreshing ? 'disabled' : ''}`}
 
-            {loading && <p>Ładowanie...</p>}
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+                    ></i>
+                </h2>
 
-            {!loading && !error && users.length > 0 ? (
-                <ul>
-                    {users.map(u => (
-                        <li key={u.id}>
-                            <strong>{u.email}</strong> (Rola: {u.role})
-                        </li>
-                    ))}
-                </ul>
-            ) : (
-                !loading && !error && <p>Brak użytkowników do wyświetlenia.</p>
-            )}
-        </div>
+                {error && <p style={{color: 'red'}}>{error}</p>}
+
+                {!loading && !error && users.length > 0 ? (
+                    <ul className="task-list">
+                        {users.map(u => (
+                            <li key={u.id}>
+                                <span>{u.email}</span>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    !loading && !error && <p>Brak użytkowników do wyświetlenia.</p>
+                )}
+            </div>
+        </>
+
+        /*
+            {!notFound && todos.length > 0 && (
+                <ul className="task-list">
+                    {todos.map(todo => (
+                        <li key={todo.id} style={{marginBottom: '8px'}}>
+                        <span>{todo.task}</span>
+                                    <button
+                                        onClick={() => handleDeleteTodo(todo.id)}
+                                        disabled={deleting[todo.id]}
+                                        className="submit-button"
+                                    >
+                                        <i className="fa-solid fa-trash"></i>
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+            </>*/
     );
 }
 

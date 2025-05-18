@@ -56,6 +56,33 @@ table tr td {
     left: 10px;
 }
 
+
+.fa-arrows-rotate {
+    position: relative;
+    left: 0;
+    color: var(--accent);
+    opacity: 0.8;
+    cursor: pointer;
+    transition: color 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    user-select: none;
+
+}
+.fa-arrows-rotate:hover {
+    color: var(--accentDark);
+    opacity: 1;
+}
+
+.fa-arrows-rotate.disabled {
+    animation: spin 1s linear infinite;
+    color: var(--accentDark);
+    pointer-events: none;
+    cursor: default;
+}
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 .fa-trash, .fa-plus  {
     position: relative;
     left: 0;
