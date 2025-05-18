@@ -24,9 +24,28 @@ function Habits() {
                 'Content-Type': 'application/json',
             },
         })
-            .then((res) => res.json())
-            .then((data) => setTags(data || []))
-            .finally(() => setRefreshing(false));
+            .then((res) => {
+                if (res.status === 404) {
+                    setTags([]);
+                    return null;
+                }
+                if (!res.ok) {
+                    throw new Error(`Unexpected status ${res.status}`);
+                }
+                return res.json();
+            })
+            .then((data) => {
+                if (data) {
+                    setTags(Array.isArray(data) ? data : []);
+                }
+            })
+            .catch((err) => {
+                console.error(err);
+                setTags([]);
+            })
+            .finally(() => {
+                setRefreshing(false);
+            });
     };
 
     useEffect(() => {
