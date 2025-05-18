@@ -10,6 +10,7 @@ services:
       - ./config/jwt:/var/www/html/config/jwt
     depends_on:
       - database
+      - rabbitmq
 
   nginx:
     image: nginx:latest
@@ -49,5 +50,15 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+
+  node_worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.node
+    depends_on:
+      - rabbitmq
+    networks:
+      - default
+
 volumes:
   database_data:

@@ -7,8 +7,7 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     unzip \
     git \
- && docker-php-ext-install pdo pdo_pgsql bcmath zip
-
+ && docker-php-ext-install pdo pdo_pgsql bcmath zip sockets
 
 # Composer
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
