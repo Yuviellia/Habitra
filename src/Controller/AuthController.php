@@ -17,31 +17,33 @@ class AuthController extends AbstractController {
     }
 
     #[Route('/api/login', name: 'api_login', methods: ['POST'])]
-    #[OA\Post(
-        path: "/api/login",
-        summary: "Logs in the user"
-    )]
-    #[OA\RequestBody(
-        required: true,
-        content: new OA\JsonContent(
-            properties: [
-                new OA\Property(property: "email", description: "User email", type: "string"),
-                new OA\Property(property: "password", description: "User password", type: "string")
-            ],
-            type: "object"
-        )
-    )]
-    #[OA\Response(
-        response: 200,
-        description: "Login successful",
-        content: new OA\JsonContent(
-            properties: [
-                new OA\Property(property: "message", type: "string", example: "Login successful"),
-                new OA\Property(property: "token", type: "string", example: "example-token")
-            ],
-            type: "object"
-        )
-    )]
+//    #[OA\Post(
+//        path: "/api/login",
+//        summary: "Logs in the user",
+//        tags: ["Authentication"]
+//    )]
+//    #[OA\RequestBody(
+//        required: true,
+//        content: new OA\JsonContent(
+//            required: ["email", "password"],
+//            properties: [
+//                new OA\Property(property: "email", description: "User email", type: "string", example: "user@example.com"),
+//                new OA\Property(property: "password", description: "User password", type: "string", example: "mypassword")
+//            ],
+//            type: "object"
+//        )
+//    )]
+//    #[OA\Response(
+//        response: 200,
+//        description: "Login successful, returns JWT token",
+//        content: new OA\JsonContent(
+//            properties: [
+//                new OA\Property(property: "message", type: "string", example: "Login successful"),
+//                new OA\Property(property: "token", type: "string", example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+//            ],
+//            type: "object"
+//        )
+//    )]
     #[OA\Response(
         response: 400,
         description: "Bad Request (missing email or password)",
@@ -71,17 +73,19 @@ class AuthController extends AbstractController {
     #[Route('/api/register', name: 'api_register', methods: ['POST'])]
     #[OA\Post(
         path: "/api/register",
-        summary: "Registers a new user"
+        summary: "Registers a new user",
+        tags: ["Authentication"]
     )]
     #[OA\RequestBody(
         required: true,
         content: new OA\JsonContent(
+            required: ["email", "password", "name", "surname"],
             properties: [
-                new OA\Property(property: "email", description: "User email", type: "string"),
-                new OA\Property(property: "password", description: "User password", type: "string"),
-                new OA\Property(property: "name", description: "User name", type: "string"),
-                new OA\Property(property: "surname", description: "User surname", type: "string"),
-                new OA\Property(property: "phone", description: "User phone (optional)", type: "string", nullable: true)
+                new OA\Property(property: "email", description: "User email", type: "string", example: "user@example.com"),
+                new OA\Property(property: "password", description: "User password", type: "string", example: "mypassword"),
+                new OA\Property(property: "name", description: "User name", type: "string", example: "John"),
+                new OA\Property(property: "surname", description: "User surname", type: "string", example: "Doe"),
+                new OA\Property(property: "phone", description: "User phone", type: "string", example: "+48123123123", nullable: true)
             ],
             type: "object"
         )
@@ -92,14 +96,15 @@ class AuthController extends AbstractController {
         content: new OA\JsonContent(
             properties: [
                 new OA\Property(property: "message", type: "string", example: "User registered successfully"),
+                new OA\Property(property: "token", type: "string", example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."),
                 new OA\Property(
                     property: "user",
                     properties: [
-                        new OA\Property(property: "id", type: "integer"),
-                        new OA\Property(property: "email", type: "string"),
-                        new OA\Property(property: "name", type: "string"),
-                        new OA\Property(property: "surname", type: "string"),
-                        new OA\Property(property: "phone", type: "string", nullable: true)
+                        new OA\Property(property: "id", type: "integer", example: 1),
+                        new OA\Property(property: "email", type: "string", example: "user@example.com"),
+                        new OA\Property(property: "name", type: "string", example: "John"),
+                        new OA\Property(property: "surname", type: "string", example: "Doe"),
+                        new OA\Property(property: "phone", type: "string", example: "+48123123123", nullable: true),
                     ],
                     type: "object"
                 )
@@ -109,10 +114,10 @@ class AuthController extends AbstractController {
     )]
     #[OA\Response(
         response: 400,
-        description: "Bad Request (missing required fields or email already registered)",
+        description: "Bad Request (missing fields or email already registered)",
         content: new OA\JsonContent(
             properties: [
-                new OA\Property(property: "message", type: "string", example: "Name, surname, email, and password required or Email already registered")
+                new OA\Property(property: "message", type: "string", example: "Name, surname, email, and password required")
             ],
             type: "object"
         )
@@ -126,11 +131,48 @@ class AuthController extends AbstractController {
         return $this->json($result['body'], $result['status']);
     }
 
-
-    #[Route('/api/users', methods:['GET'])]
+    #[Route('/api/users', name: 'api_get_users', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN')]
+    #[OA\Get(
+        path: "/api/users",
+        summary: "Gets a list of all non-admin users",
+        security: [["bearerAuth" => []]],
+        tags: ["Users"]
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "List of non-admin users",
+        content: new OA\JsonContent(
+            type: "array",
+            items: new OA\Items(
+                properties: [
+                    new OA\Property(property: "id", type: "integer", example: 1),
+                    new OA\Property(property: "email", type: "string", example: "user@example.com"),
+                    new OA\Property(property: "role", type: "string", example: "ROLE_USER"),
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 404,
+        description: "No non-admin users found",
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: "message", type: "string", example: "No non-admin users found")
+            ]
+        )
+    )]
+    #[OA\Response(
+        response: 401,
+        description: "Unauthorized (missing or invalid JWT)",
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: "message", type: "string", example: "JWT Token not found or invalid")
+            ]
+        )
+    )]
     public function getUsers(): JsonResponse {
-        $users = $this->authService->getNonAdminUsers();
-        return $this->json($users);
+        $result = $this->authService->getNonAdminUsers();
+        return $this->json($result['body'], $result['status']);
     }
 }
