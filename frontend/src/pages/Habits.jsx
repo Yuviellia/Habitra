@@ -148,10 +148,13 @@ function Habits() {
             </div>
 
             <div id="habit-table-section" className="section">
-                <h2>Habit Tracker</h2>
-                <button onClick={refreshHabits} disabled={refreshing}>
-                    {refreshing ? 'Odświeżanie...' : 'Odśwież'}
-                </button>
+                <h2>Habit Tracker &nbsp;
+                    <i
+                        onClick={!refreshing ? refreshHabits : undefined}
+                        className={`fa-solid fa-arrows-rotate ${refreshing ? 'disabled' : ''}`}
+
+                    ></i>
+                </h2>
                 <h3>
                     <a
                         href="#"
@@ -203,7 +206,7 @@ function Habits() {
                                         </button>
                                     </div>
                                 </td>
-                                {Array.from({ length: 7 }).map((_, idx) => {
+                                {Array.from({length: 7}).map((_, idx) => {
                                     const date = new Date(monday);
                                     date.setDate(monday.getDate() + idx);
                                     const iso = toLocalISODate(date);
@@ -224,7 +227,7 @@ function Habits() {
                                     <div className="progress">
                                         <div
                                             className="progress-bar"
-                                            style={{ width: `${(marksThisWeek / 7) * 100}%` }}
+                                            style={{width: `${(marksThisWeek / 7) * 100}%`}}
                                         ></div>
                                     </div>
                                 </td>

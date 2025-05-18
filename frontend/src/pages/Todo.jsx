@@ -83,15 +83,18 @@ function Todos() {
             </div>
 
             <div id="todo-section" className="section">
-                <h2>To Do List</h2>
-                <button onClick={refreshTodos} disabled={refreshing}>
-                    {refreshing ? 'Odświeżanie...' : 'Odśwież'}
-                </button>
+                <h2>To Do List  &nbsp;
+                    <i
+                        onClick={!refreshing ? refreshTodos : undefined}
+                        className={`fa-solid fa-arrows-rotate ${refreshing ? 'disabled' : ''}`}
+
+                    ></i>
+                </h2>
 
                 {!notFound && todos.length > 0 && (
                     <ul className="task-list">
                         {todos.map(todo => (
-                            <li key={todo.id} style={{ marginBottom: '8px' }}>
+                            <li key={todo.id} style={{marginBottom: '8px'}}>
                                 <span>{todo.task}</span>
                                 <button
                                     onClick={() => handleDeleteTodo(todo.id)}
