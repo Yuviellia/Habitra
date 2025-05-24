@@ -1,0 +1,47 @@
+@startuml
+hide circle
+
+entity "user_details" as user_details {
+  * id : SERIAL <<PK>>
+  --
+    name    : VARCHAR(255)
+    surname : VARCHAR(255)
+    phone   : VARCHAR(20)
+}
+
+entity "users" as users {
+  * id         : SERIAL <<PK>>
+  * iddetails  : INT    <<FK user_details(id)>>
+    email      : VARCHAR(255) <<UNIQUE, INDEX=UNIQ_1483A5E9E7927C74>>
+    password   : VARCHAR(255)
+    enabled    : BOOLEAN
+    role       : VARCHAR(20)   <<CHECK(role IN ('ROLE_USER','ROLE_ADMIN'))>>
+    created_at : TIMESTAMP
+}
+
+entity "tags" as tags {
+  * id     : SERIAL <<PK>>
+  * iduser : INT    <<FK users(id)>>
+    name    : VARCHAR(255)
+    created_at : TIMESTAMP
+}
+
+entity "marked" as marked {
+  * id    : SERIAL <<PK>>
+  * idtag : INT    <<FK tags(id)>>
+    date  : DATE
+}
+
+entity "todo" as todo {
+  * id      : SERIAL <<PK>>
+  * iduser  : INT    <<FK users(id)>>
+    task    : TEXT
+    created_at : TIMESTAMP
+}
+
+user_details ||--|| users        : "1-to-1 / 1 user_details per user"
+users        ||--o{ tags         : "1-to-many / a user has many tags"
+tags         ||--o{ marked       : "1-to-many / a tag has many marked dates"
+users        ||--o{ todo         : "1-to-many / a user has many todos"
+
+@enduml

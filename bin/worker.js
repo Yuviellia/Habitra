@@ -1,5 +1,8 @@
 const amqp = require('amqplib');
 const RETRY_INTERVAL = 5000;
+const path = require('path');
+const logFile = path.join(__dirname, 'worker.log');
+const fsPromises = require('fs').promises;
 
 async function connectWithRetry() {
     while (true) {
@@ -13,6 +16,15 @@ async function connectWithRetry() {
         }
     }
 }
+async function logToFile(message) {
+    const time = new Date().toISOString();
+    try {
+        await fsPromises.appendFile(logFile, `[${time}] ${message}\n`);
+    } catch (err) {
+        console.error("Failed to write log:", err);
+        process.exit(1);
+    }
+}
 
 async function work() {
     const conn = await connectWithRetry();
@@ -22,13 +34,13 @@ async function work() {
     await channel.assertQueue(queue, { durable: true });
     await channel.prefetch(1, false);
 
-    console.log(`[x] Waiting for messages in ${queue}. To exit press CTRL+C`);
+    console.log(`[x] Waiting for messages in ${queue}`);
 
-    await channel.consume(queue, msg => {
+    await channel.consume(queue, async msg => {
         const content = msg.content.toString();
         console.log(`[.] Received: '${content}'`);
+        await logToFile(`${content}`);
 
-        // tutaj cos sie wbije
         const secs = content.split('.').length - 1;
         setTimeout(() => {
             console.log(`[v] Done processing: '${content}'`);
