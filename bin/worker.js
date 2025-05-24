@@ -1,7 +1,21 @@
 const amqp = require('amqplib');
+const RETRY_INTERVAL = 5000;
+
+async function connectWithRetry() {
+    while (true) {
+        try {
+            const conn = await amqp.connect('amqp://rabbitmq');
+            console.log("[✔] Connected to RabbitMQ");
+            return conn;
+        } catch (err) {
+            console.error("[!] RabbitMQ not ready. Retrying in 5 seconds...");
+            await new Promise(resolve => setTimeout(resolve, RETRY_INTERVAL));
+        }
+    }
+}
 
 async function work() {
-    const conn = await amqp.connect('amqp://rabbitmq');
+    const conn = await connectWithRetry();
     const channel = await conn.createChannel();
     const queue = 'habit_queue';
 
@@ -20,8 +34,10 @@ async function work() {
             console.log(`[v] Done processing: '${content}'`);
             channel.ack(msg);
         }, secs * 1000);
-
-    }, {noAck: false});
+    }, { noAck: false });
 }
 
-work().catch(console.error);
+work().catch(err => {
+    console.error("[FATAL] Worker crashed:", err);
+    process.exit(1);
+});

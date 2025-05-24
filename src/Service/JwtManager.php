@@ -3,6 +3,7 @@ namespace App\Service;
 
 use App\Entity\User;
 use Firebase\JWT\JWT;
+use Firebase\JWT\ExpiredException;
 
 class JwtManager {
     private string $privateKeyPath;
@@ -33,8 +34,10 @@ class JwtManager {
         try {
             $headers = ['RS256'];
             return JWT::decode($jwt, $publicKey, $headers);
+        } catch (ExpiredException $e) {
+            throw new \Exception('Token expired');
         } catch (\Exception $e) {
-            return null;
+            throw new \Exception('Invalid token');
         }
     }
 }
