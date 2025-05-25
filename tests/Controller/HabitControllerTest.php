@@ -163,4 +163,64 @@ class HabitControllerTest extends WebTestCase {
         $this->assertSame('Habit marked for date', $data['message']);
         $this->assertSame('2025-04-21', $data['marked']['date']);
     }
+    public function testDeleteHabitNotFound(): void {
+        $user = $this->createUser();
+        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
+        $token = $jwtManager->create($user);
+
+        $this->client->request('DELETE', '/api/habits/99999', [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+        ]);
+
+        $response = $this->client->getResponse();
+        $this->assertSame(404, $response->getStatusCode());
+        $this->assertSame('Habit not found for this user', json_decode($response->getContent(), true)['message']);
+    }
+    public function testDeleteHabitUnauthorized(): void {
+        $owner = $this->createUser('owner@example.com');
+        $intruder = $this->createUser('intruder@example.com');
+        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
+        $token = $jwtManager->create($intruder);
+
+        $habit = new Tag();
+        $habit->setUser($owner);
+        $habit->setName('Private habit');
+        $this->em->persist($habit);
+        $this->em->flush();
+
+        $this->client->request('DELETE', '/api/habits/' . $habit->getId(), [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+        ]);
+
+        $response = $this->client->getResponse();
+        $this->assertSame(404, $response->getStatusCode());
+        $this->assertSame('Habit not found for this user', json_decode($response->getContent(), true)['message']);
+    }
+
+
+    public function testDeleteHabitSuccess(): void {
+        $user = $this->createUser();
+        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
+        $token = $jwtManager->create($user);
+
+        $habit = new Tag();
+        $habit->setUser($user);
+        $habit->setName('Test habit');
+        $this->em->persist($habit);
+        $this->em->flush();
+
+        $habitId = $habit->getId();
+
+        $this->client->request('DELETE', '/api/habits/' . $habitId, [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+        ]);
+
+        $response = $this->client->getResponse();
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('Habit and all associated marks deleted', json_decode($response->getContent(), true)['message']);
+
+        $deletedHabit = $this->em->getRepository(Tag::class)->find($habitId);
+        $this->assertNull($deletedHabit);
+    }
+
 }

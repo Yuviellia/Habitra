@@ -120,4 +120,65 @@ class TodoControllerTest extends WebTestCase {
         $this->assertSame('wwwww', $data['todo']['task']);
         $this->assertNotEmpty($data['todo']['createdAt']);
     }
+    public function testDeleteTodoNotFound(): void {
+        $user = $this->createUser();
+        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
+        $token = $jwtManager->create($user);
+
+        $this->client->request('DELETE', '/api/todos/99999', [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+        ]);
+
+        $response = $this->client->getResponse();
+        $this->assertSame(404, $response->getStatusCode());
+        $this->assertSame('Todo not found', json_decode($response->getContent(), true)['message']);
+    }
+
+    public function testDeleteTodoUnauthorized(): void {
+        $owner = $this->createUser('owner@example.com');
+        $intruder = $this->createUser('intruder@example.com');
+        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
+        $token = $jwtManager->create($intruder);
+
+        $todo = new Todo();
+        $todo->setUser($owner);
+        $todo->setTask('Only owner can delete this');
+        $todo->setCreatedAt(new \DateTime());
+        $this->em->persist($todo);
+        $this->em->flush();
+
+        $this->client->request('DELETE', '/api/todos/' . $todo->getId(), [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+        ]);
+
+        $response = $this->client->getResponse();
+        $this->assertSame(403, $response->getStatusCode());
+        $this->assertSame('Unauthorized to delete this todo', json_decode($response->getContent(), true)['message']);
+    }
+
+    public function testDeleteTodoSuccess(): void {
+        $user = $this->createUser();
+        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
+        $token = $jwtManager->create($user);
+
+        $todo = new Todo();
+        $todo->setUser($user);
+        $todo->setTask('Todo to delete');
+        $todo->setCreatedAt(new \DateTime());
+        $this->em->persist($todo);
+        $this->em->flush();
+
+        $todoId = $todo->getId();
+
+        $this->client->request('DELETE', '/api/todos/' . $todoId, [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+        ]);
+
+        $response = $this->client->getResponse();
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('Todo deleted successfully', json_decode($response->getContent(), true)['message']);
+
+        $deletedTodo = $this->em->getRepository(Todo::class)->find($todoId);
+        $this->assertNull($deletedTodo);
+    }
 }
