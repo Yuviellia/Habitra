@@ -1,6 +1,7 @@
 <?php
 namespace App\Tests\Controller;
 
+use App\Entity\Marked;
 use App\Entity\User;
 use App\Entity\UserDetails;
 use App\Entity\Tag;
@@ -141,28 +142,6 @@ class HabitControllerTest extends WebTestCase {
         $this->assertSame('Habit not found for this user', json_decode($response->getContent(), true)['message']);
     }
 
-    public function testMarkHabitSuccess(): void {
-        $user = $this->createUser();
-        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
-        $token = $jwtManager->create($user);
-
-        $habit = new Tag();
-        $habit->setUser($user);
-        $habit->setName('Stretch');
-        $habit->setCreatedAt(new \DateTime());
-        $this->em->persist($habit);
-        $this->em->flush();
-
-        $this->client->request('POST', "/api/habits/{$habit->getId()}/mark", [], [], [
-            'CONTENT_TYPE'=>'application/json',
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
-        ], json_encode(['date'=>'2025-04-21']));
-        $response = $this->client->getResponse();
-        $this->assertSame(201, $response->getStatusCode());
-        $data = json_decode($response->getContent(), true);
-        $this->assertSame('Habit marked for date', $data['message']);
-        $this->assertSame('2025-04-21', $data['marked']['date']);
-    }
     public function testDeleteHabitNotFound(): void {
         $user = $this->createUser();
         $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
@@ -221,6 +200,114 @@ class HabitControllerTest extends WebTestCase {
 
         $deletedHabit = $this->em->getRepository(Tag::class)->find($habitId);
         $this->assertNull($deletedHabit);
+    }
+
+    public function testMarkHabitNotOwnedByUser(): void {
+        $owner = $this->createUser('owner@example.com');
+        $otherUser = $this->createUser('intruder@example.com');
+        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
+        $token = $jwtManager->create($otherUser);
+
+        $habit = new Tag();
+        $habit->setUser($owner);
+        $habit->setName('Secret habit');
+        $this->em->persist($habit);
+        $this->em->flush();
+
+        $this->client->request('POST', '/api/habits/' . $habit->getId() . '/mark', [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+            'CONTENT_TYPE' => 'application/json',
+        ], json_encode(['date' => '2025-05-01']));
+
+        $response = $this->client->getResponse();
+        $this->assertSame(404, $response->getStatusCode());
+        $this->assertSame('Habit not found for this user', json_decode($response->getContent(), true)['message']);
+    }
+    public function testMarkHabitInvalidDateFormat(): void {
+        $user = $this->createUser();
+        $habit = new Tag();
+        $habit->setUser($user);
+        $habit->setName('Read book');
+        $this->em->persist($habit);
+        $this->em->flush();
+
+        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
+        $token = $jwtManager->create($user);
+
+        $this->client->request('POST', '/api/habits/' . $habit->getId() . '/mark', [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+            'CONTENT_TYPE' => 'application/json',
+        ], json_encode(['date' => 'not-a-date']));
+
+        $response = $this->client->getResponse();
+        $this->assertSame(400, $response->getStatusCode());
+        $this->assertSame('Invalid date format', json_decode($response->getContent(), true)['message']);
+    }
+    public function testMarkHabitMissingDate(): void {
+        $user = $this->createUser();
+        $habit = new Tag();
+        $habit->setUser($user);
+        $habit->setName('Journal');
+        $this->em->persist($habit);
+        $this->em->flush();
+
+        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
+        $token = $jwtManager->create($user);
+
+        $this->client->request('POST', '/api/habits/' . $habit->getId() . '/mark', [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+            'CONTENT_TYPE' => 'application/json',
+        ], json_encode([]));
+
+        $response = $this->client->getResponse();
+        $this->assertSame(400, $response->getStatusCode());
+        $this->assertSame('Marked date is required', json_decode($response->getContent(), true)['message']);
+    }
+    public function testMarkAndUnmarkHabit(): void {
+        $user = $this->createUser();
+        $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
+        $token = $jwtManager->create($user);
+
+        $habit = new Tag();
+        $habit->setUser($user);
+        $habit->setName('Water plants');
+        $this->em->persist($habit);
+        $this->em->flush();
+
+        $habitId = $habit->getId();
+        $date = '2025-05-01';
+
+        $url = '/api/habits/' . $habitId . '/mark';
+        $headers = [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+            'CONTENT_TYPE' => 'application/json',
+        ];
+        $body = json_encode(['date' => $date]);
+
+        $this->client->request('POST', $url, [], [], $headers, $body);
+        $response = $this->client->getResponse();
+        $this->assertSame(201, $response->getStatusCode());
+        $data = json_decode($response->getContent(), true);
+        $this->assertSame('Habit marked for date', $data['message']);
+        $this->assertSame($date, $data['marked']['date']);
+
+        $marked = $this->em->getRepository(Marked::class)->findOneBy([
+            'tag' => $habit,
+            'date' => new \DateTime($date),
+        ]);
+        $this->assertNotNull($marked, 'Marked date should exist after marking');
+
+        $this->client->request('POST', $url, [], [], $headers, $body);
+        $response = $this->client->getResponse();
+        $this->assertSame(200, $response->getStatusCode());
+        $data = json_decode($response->getContent(), true);
+        $this->assertSame('Marked date removed', $data['message']);
+
+        $marked = $this->em->getRepository(Marked::class)->findOneBy([
+            'tag' => $habit,
+            'date' => new \DateTime($date),
+        ]);
+        $this->assertNull($marked, 'Marked date should be removed after unmarking');
     }
 
 }
