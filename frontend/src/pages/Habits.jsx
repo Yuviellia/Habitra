@@ -10,10 +10,16 @@ function Habits() {
     const [submitting, setSubmitting] = useState(false);
     const [deleting, setDeleting] = useState({});
     const [marking, setMarking] = useState({});
-    const [clock, setClock] = useState({ hours: '--', minutes: '--', period: '--' });
     const [weekOffset, setWeekOffset] = useState(0);
 
     const getAuthToken = () => localStorage.getItem('token');
+
+    // Compute a single "isLoading" flag whenever any operation is in progress
+    const isLoading =
+        refreshing ||
+        submitting ||
+        Object.values(deleting).some(Boolean) ||
+        Object.values(marking).some(Boolean);
 
     const fetchHabits = () => {
         setRefreshing(true);
@@ -52,7 +58,11 @@ function Habits() {
         fetchHabits();
     }, []);
 
-    const refreshHabits = () => fetchHabits();
+    const refreshHabits = () => {
+        if (!isLoading) {
+            fetchHabits();
+        }
+    };
 
     const handleNewTag = (e) => {
         e.preventDefault();
@@ -114,7 +124,9 @@ function Habits() {
             method: 'DELETE',
             headers: { Authorization: `Bearer ${token}` },
         })
-            .then((res) => res.json().then((body) => ({ ok: res.ok, body })))
+            .then((res) =>
+                res.json().then((body) => ({ ok: res.ok, body }))
+            )
             .then(({ ok, body }) => {
                 if (ok) setTags((prev) => prev.filter((t) => t.id !== habitId));
                 else alert(body.message || 'Error deleting habit');
@@ -141,18 +153,19 @@ function Habits() {
 
     return (
         <>
-
             <div id="header" className="section">
                 <h1>Habitra</h1>
                 <Clock />
             </div>
 
             <div id="habit-table-section" className="section">
-                <h2>Habit Tracker &nbsp;
+                <h2>
+                    Habit Tracker &nbsp;
                     <i
-                        onClick={!refreshing ? refreshHabits : undefined}
-                        className={`fa-solid fa-arrows-rotate ${refreshing ? 'disabled' : ''}`}
-
+                        onClick={refreshHabits}
+                        className={`fa-solid fa-arrows-rotate ${
+                            isLoading ? 'fa-spin disabled' : ''
+                        }`}
                     ></i>
                 </h2>
                 <h3>
@@ -160,20 +173,20 @@ function Habits() {
                         href="#"
                         onClick={(e) => {
                             e.preventDefault();
-                            setWeekOffset((prev) => prev - 1);
+                            if (!isLoading) setWeekOffset((prev) => prev - 1);
                         }}
+                        className={isLoading ? 'disabled' : ''}
                     >
                         &lt;
-                    </a>
-                    {' '}
-                    {monday.toLocaleDateString('pl-PL')}
-                    {' '}
+                    </a>{' '}
+                    {monday.toLocaleDateString('pl-PL')}{' '}
                     <a
                         href="#"
                         onClick={(e) => {
                             e.preventDefault();
-                            setWeekOffset((prev) => prev + 1);
+                            if (!isLoading) setWeekOffset((prev) => prev + 1);
                         }}
+                        className={isLoading ? 'disabled' : ''}
                     >
                         &gt;
                     </a>
@@ -184,7 +197,9 @@ function Habits() {
                     <tr>
                         <th className="task-column">Task</th>
                         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
-                            <th key={d} className="day-column">{d}</th>
+                            <th key={d} className="day-column">
+                                {d}
+                            </th>
                         ))}
                         <th className="progress-column">Progress</th>
                     </tr>
@@ -200,13 +215,13 @@ function Habits() {
                                         <button
                                             onClick={() => handleDeleteHabit(tag.id)}
                                             className="submit-button"
-                                            disabled={deleting[tag.id]}
+                                            disabled={isLoading}
                                         >
                                             <i className="fa-solid fa-trash"></i>
                                         </button>
                                     </div>
                                 </td>
-                                {Array.from({length: 7}).map((_, idx) => {
+                                {Array.from({ length: 7 }).map((_, idx) => {
                                     const date = new Date(monday);
                                     date.setDate(monday.getDate() + idx);
                                     const iso = toLocalISODate(date);
@@ -217,7 +232,7 @@ function Habits() {
                                             <input
                                                 type="checkbox"
                                                 checked={isChecked}
-                                                disabled={marking[tag.id]}
+                                                disabled={isLoading}
                                                 onChange={() => handleMarkDate(tag.id, iso)}
                                             />
                                         </td>
@@ -227,7 +242,7 @@ function Habits() {
                                     <div className="progress">
                                         <div
                                             className="progress-bar"
-                                            style={{width: `${(marksThisWeek / 7) * 100}%`}}
+                                            style={{ width: `${(marksThisWeek / 7) * 100}%` }}
                                         ></div>
                                     </div>
                                 </td>
@@ -236,7 +251,10 @@ function Habits() {
                     })}
                     <tr>
                         <td colSpan="9">
-                            <form onSubmit={handleNewTag} className="add-container">
+                            <form
+                                onSubmit={handleNewTag}
+                                className="add-container"
+                            >
                                 <input
                                     name="tag"
                                     type="text"
@@ -244,9 +262,14 @@ function Habits() {
                                     className="task-input"
                                     value={newTag}
                                     onChange={(e) => setNewTag(e.target.value)}
+                                    disabled={isLoading}
                                     required
                                 />
-                                <button type="submit" className="submit-button" disabled={submitting}>
+                                <button
+                                    type="submit"
+                                    className="submit-button"
+                                    disabled={isLoading || submitting}
+                                >
                                     <i className="fa-solid fa-plus"></i>
                                 </button>
                             </form>

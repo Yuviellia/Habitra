@@ -13,6 +13,12 @@ function Todos() {
 
     const getAuthToken = () => localStorage.getItem('token');
 
+    // Compute a single "isLoading" flag whenever any operation is in progress
+    const isLoading =
+        refreshing ||
+        submitting ||
+        Object.values(deleting).some(Boolean);
+
     const fetchTodos = () => {
         setRefreshing(true);
         const token = getAuthToken();
@@ -38,8 +44,15 @@ function Todos() {
             .finally(() => setRefreshing(false));
     };
 
-    useEffect(() => { fetchTodos(); }, []);
-    const refreshTodos = () => fetchTodos();
+    useEffect(() => {
+        fetchTodos();
+    }, []);
+
+    const refreshTodos = () => {
+        if (!isLoading) {
+            fetchTodos();
+        }
+    };
 
     const handleNewTodo = (e) => {
         e.preventDefault();
@@ -76,29 +89,28 @@ function Todos() {
 
     return (
         <>
-
             <div id="header" className="section">
                 <h1>Habitra</h1>
                 <Clock />
             </div>
 
             <div id="todo-section" className="section">
-                <h2>To Do List  &nbsp;
+                <h2>
+                    To Do List &nbsp;
                     <i
-                        onClick={!refreshing ? refreshTodos : undefined}
-                        className={`fa-solid fa-arrows-rotate ${refreshing ? 'disabled' : ''}`}
-
+                        onClick={refreshTodos}
+                        className={`fa-solid fa-arrows-rotate ${isLoading ? 'fa-spin disabled' : ''}`}
                     ></i>
                 </h2>
 
                 {!notFound && todos.length > 0 && (
                     <ul className="task-list">
                         {todos.map(todo => (
-                            <li key={todo.id} style={{marginBottom: '8px'}}>
+                            <li key={todo.id} style={{ marginBottom: '8px' }}>
                                 <span>{todo.task}</span>
                                 <button
                                     onClick={() => handleDeleteTodo(todo.id)}
-                                    disabled={deleting[todo.id]}
+                                    disabled={isLoading}
                                     className="submit-button"
                                 >
                                     <i className="fa-solid fa-trash"></i>
@@ -108,7 +120,6 @@ function Todos() {
                     </ul>
                 )}
 
-
                 <form onSubmit={handleNewTodo} className="add-container">
                     <input
                         type="text"
@@ -117,8 +128,13 @@ function Todos() {
                         value={newTodo}
                         onChange={e => setNewTodo(e.target.value)}
                         required
+                        disabled={isLoading}
                     />
-                    <button type="submit" className="submit-button" disabled={submitting}>
+                    <button
+                        type="submit"
+                        className="submit-button"
+                        disabled={isLoading || submitting}
+                    >
                         <i className="fa-solid fa-plus"></i>
                     </button>
                 </form>
