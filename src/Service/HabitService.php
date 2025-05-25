@@ -26,7 +26,7 @@ class HabitService
         $habits = $this->habitRepository->getHabitsByUserId($userId);
         if (empty($habits)) {
             return [
-                'status' => 404,
+                'status' => 200,
                 'body' => ['message' => 'No habits found for this user'],
             ];
         }

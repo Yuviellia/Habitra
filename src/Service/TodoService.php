@@ -23,7 +23,7 @@ class TodoService {
         $todos = $this->todoRepository->getTodosByUserId($userId);
         if (empty($todos)) {
             return [
-                'status' => 404,
+                'status' => 200,
                 'body'   => ['message' => 'No todos found for this user'],
             ];
         }

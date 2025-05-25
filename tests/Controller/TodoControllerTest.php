@@ -54,7 +54,7 @@ class TodoControllerTest extends WebTestCase {
         ]);
 
         $response = $this->client->getResponse();
-        $this->assertSame(404, $response->getStatusCode());
+        $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('No todos found for this user', json_decode($response->getContent(), true)['message']);
     }
     public function testGetTodosUserHasSome(): void {

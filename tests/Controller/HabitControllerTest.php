@@ -57,7 +57,7 @@ class HabitControllerTest extends WebTestCase {
             'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
         ]);
         $response = $this->client->getResponse();
-        $this->assertSame(404, $response->getStatusCode());
+        $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('No habits found for this user', json_decode($response->getContent(), true)['message']);
     }
 
@@ -155,6 +155,7 @@ class HabitControllerTest extends WebTestCase {
         $this->assertSame(404, $response->getStatusCode());
         $this->assertSame('Habit not found for this user', json_decode($response->getContent(), true)['message']);
     }
+
     public function testDeleteHabitUnauthorized(): void {
         $owner = $this->createUser('owner@example.com');
         $intruder = $this->createUser('intruder@example.com');
@@ -175,7 +176,6 @@ class HabitControllerTest extends WebTestCase {
         $this->assertSame(404, $response->getStatusCode());
         $this->assertSame('Habit not found for this user', json_decode($response->getContent(), true)['message']);
     }
-
 
     public function testDeleteHabitSuccess(): void {
         $user = $this->createUser();
@@ -243,6 +243,7 @@ class HabitControllerTest extends WebTestCase {
         $this->assertSame(400, $response->getStatusCode());
         $this->assertSame('Invalid date format', json_decode($response->getContent(), true)['message']);
     }
+
     public function testMarkHabitMissingDate(): void {
         $user = $this->createUser();
         $habit = new Tag();
@@ -263,6 +264,7 @@ class HabitControllerTest extends WebTestCase {
         $this->assertSame(400, $response->getStatusCode());
         $this->assertSame('Marked date is required', json_decode($response->getContent(), true)['message']);
     }
+
     public function testMarkAndUnmarkHabit(): void {
         $user = $this->createUser();
         $jwtManager = self::getContainer()->get(JWTTokenManagerInterface::class);
