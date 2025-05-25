@@ -13,7 +13,7 @@ div#login, div#login *{
     padding: 0;
     box-sizing: border-box;
     font-family: Arial, sans-serif;
-    color: var(--font);
+    color: var(--grayDark);
 }
 div#login {
     background: white;

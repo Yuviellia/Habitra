@@ -3,6 +3,7 @@ import Clock from '../components/Clock';
 import '../css/variables.css';
 import '../css/main.css';
 
+
 function Habits() {
     const [tags, setTags] = useState([]);
     const [newTag, setNewTag] = useState('');
@@ -14,7 +15,6 @@ function Habits() {
 
     const getAuthToken = () => localStorage.getItem('token');
 
-    // Compute a single "isLoading" flag whenever any operation is in progress
     const isLoading =
         refreshing ||
         submitting ||

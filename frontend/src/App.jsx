@@ -9,6 +9,7 @@ import RoleRoute from './components/RoleRoute';
 import LogoutButton from './components/LogoutButton';
 import { useEffect, useState } from 'react';
 import { isUser, isAdmin } from './auth';
+import ModeSwitchButton from './components/ModeSwitchButton';
 
 function AppWrapper() {
     const token = localStorage.getItem('token');
@@ -28,14 +29,13 @@ function AppWrapper() {
             <div className="container">
                 {showNav && (
                     <nav className="navbar">
-                        {/* Only show “To Do List” & “Habit Tracker” if ROLE_USER */}
-                        {isUser() && <Link to="/todo">To Do List</Link>}
-                        {isUser() && <Link to="/habits">Habit Tracker</Link>}
-
-                        {/* Only show “Users” if ROLE_ADMIN */}
-                        {isAdmin() && <Link to="/users">Users</Link>}
-
-                        <LogoutButton />
+                        <ModeSwitchButton/>
+                        <div className="nav-links">
+                            {isUser() && <Link to="/todo">To Do List</Link>}
+                            {isUser() && <Link to="/habits">Habit Tracker</Link>}
+                            {isAdmin() && <Link to="/users">Users</Link>}
+                            <LogoutButton/>
+                        </div>
                     </nav>
                 )}
 

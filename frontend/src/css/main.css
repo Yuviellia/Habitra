@@ -55,7 +55,16 @@ table tr td {
     position: absolute;
     left: 10px;
 }
+.mode-switch-button{
+    background-color: var(--header);
+    border: none;
+    padding: 0 0 0 15px;
+    font-size: 1.2em;
 
+}
+.mode-switch-button:hover {
+    border: none;
+}
 
 .fa-arrows-rotate {
     position: relative;
@@ -70,6 +79,12 @@ table tr td {
 .fa-arrows-rotate:hover {
     color: var(--accentDark);
     opacity: 1;
+}
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
 }
 
 .fa-arrows-rotate.disabled {
@@ -107,14 +122,14 @@ table tr:hover .fa-trash, .task-list li:hover .fa-trash, table tr:hover .fa-plus
 }
 
 .navbar {
-    background: var(--grayDark);
+    background: var(--header);
     padding: 12px 0;
     text-align: right;
     border-radius: 8px 8px 0 0;
     margin-bottom: 0;
 }
 .navbar a {
-    color: var(--body);
+    color: var(--headerFont);
     text-decoration: none;
     margin: 0 20px;
     font-weight: 500;
@@ -304,7 +319,7 @@ input.search:focus {
     padding: 10px;
     border: 1px solid var(--border);
     border-radius: 5px;
-    background: white;
+    background: var(--white);
     font-size: 1em;
     text-align: center;
     color: var(--grayDark);
@@ -322,7 +337,7 @@ input.search:focus {
     border: 1px solid var(--border);
     border-radius: 5px;
     background: var(--accent);
-    color: white;
+    color: var(--white);
     font-size: 1em;
     cursor: pointer;
     transition: background 0.3s ease;
@@ -364,16 +379,16 @@ input.search:focus {
     width: 100%;
     padding: 0;
     z-index: 1;
-    caret-color: black;
+    caret-color: var(--black);
 }
 
 .add-container:hover .task-input {
-    color: black;
+    color: var(--black);
 }
 
 .add-container .task-input:focus {
     outline: none;
-    color: black;
+    color: var(--black);
 }
 
 .task-input::placeholder {
