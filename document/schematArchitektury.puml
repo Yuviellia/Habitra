@@ -1,0 +1,40 @@
+@startuml
+!define RECTANGLE component
+skinparam componentStyle rectangle
+skinparam databaseStyle cylinder
+skinparam queueStyle cylinder
+
+' Pakiet: Frontend
+package "Frontend (React)" {
+    RECTANGLE "React App\n(JSX + CSS)" as Frontend
+}
+
+' Pakiet: Backend
+package "Backend (Symfony, PHP)" {
+    RECTANGLE "Controllers" as Controllers
+    RECTANGLE "Services" as Services
+    RECTANGLE "ORM (Doctrine)" as ORM
+    database "PostgreSQL (Prod)" as DB_Prod
+    database "PostgreSQL (Test)" as DB_Test
+}
+
+' Pakiet: Messaging
+package "Messaging" {
+    queue "RabbitMQ" as MQ
+}
+
+' Pakiet: Worker
+package "Worker (Node.js)" {
+    RECTANGLE "Worker\n(Node.js AMQP Consumer)" as Worker
+}
+
+' Relacje między komponentami
+Frontend --> Controllers : HTTP/HTTPS (REST API)
+Controllers --> Services : wywołania wewnętrzne
+Services --> ORM : CRUD + migracje
+Services --> MQ : publikacja zadań (AMQP)
+ORM --> DB_Prod : odczyt/zapis danych
+ORM --> DB_Test : odczyt/zapis w środowisku testowym
+MQ --> Worker : przekazywanie zadań
+
+@enduml

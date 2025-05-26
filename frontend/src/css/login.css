@@ -15,6 +15,7 @@ div#login, div#login *{
     font-family: Arial, sans-serif;
     color: var(--grayDark);
 }
+
 div#login {
     background: white;
     padding: 40px;
