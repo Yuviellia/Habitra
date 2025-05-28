@@ -5,6 +5,8 @@ const LogoutButton = () => {
 
     const logout = () => {
         localStorage.removeItem('token');
+        localStorage.setItem('darkMode', 'false');
+        document.documentElement.classList.remove('dark-mode');
         navigate('/login');
     };
 

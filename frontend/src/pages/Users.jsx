@@ -20,24 +20,24 @@ function Users() {
             },
         })
             .then(async (res) => {
-                const json = await res.json().catch(() => null);
-
-                if (!json || typeof json !== 'object') {
-                    throw new Error('Nieprawidłowa odpowiedź serwera');
+                // 1️⃣ If the HTTP status is 404, read the JSON and throw its "message"
+                if (res.status === 404) {
+                    const errorJson = await res.json().catch(() => ({}));
+                    throw new Error(errorJson.message || 'Nie znaleziono użytkowników');
                 }
 
-                if (json.status === 404) {
-                    throw new Error(json.body?.message || 'Nie znaleziono użytkowników');
+                // 2️⃣ If it’s not a “200 OK”, but some other error (401, 500, etc.), read JSON→ message
+                if (!res.ok) {
+                    const errorJson = await res.json().catch(() => ({}));
+                    throw new Error(errorJson.message || 'Błąd serwera');
                 }
 
-                if (json.status !== 200) {
-                    throw new Error(json.body?.message || 'Błąd serwera');
-                }
-
-                return json.body;
+                // 3️⃣ At this point res.ok === true (status 200). The body is just an ARRAY of users:
+                return res.json();
             })
-            .then((data) => {
-                setUsers(data);
+            .then((dataArray) => {
+                // `dataArray` is already an array of {id, email, role}
+                setUsers(dataArray);
             })
             .catch((e) => {
                 setError(e.message);

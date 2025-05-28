@@ -4,10 +4,12 @@
 * [Informacje Ogólne](#informacje-ogólne)
 * [Technologie](#technologie)
 * [Funkcje](#funkcje)
-* [Zrzuty Ekranu](#zrzuty-ekranu)
 * [Instalacja](#instalacja)
 * [Dodatkowe pliki](#dodatkowe-pliki)
 * [Użycie](#użycie)
+* [Diagram ERD](#diagram-erd)
+* [Schemat architektury](#schemat-architektury)
+* [Zrzuty Ekranu](#zrzuty-ekranu)
 
 ## Informacje Ogólne
 - Habitra to aplikacja webowa umożliwiająca śledzenie nawyków użytkownika, aby wspierać codzienną produktywność i samodyscyplinę.
@@ -127,14 +129,17 @@
    - Wpisac rekord do bazy `INSERT INTO users (iddetails, email, password, enabled, role, created_at) VALUES ({numer id wygenerowany poleceniem},'{mail}','{zahashowane haslo}',true,'ROLE_ADMIN', NOW());`
 6. Uruchamianie testów
    - Uruchomić testy poleceniem `docker exec -it symfony_php php bin/phpunit --testdox`
+7. Przeglądanie logów
+   - Poleceniem `docker exec -it habitra-node_worker-1 cat /app/bin/worker.log`
 
 ## Dodatkowe pliki
 - Wyeksportowana baza danych w katalogu głównym: `database.sql`
 - Prototyp z Figmy w katalogu `dockument`: `figma.pdf`
-- Diagram ERD w katalogu `dockument`: `erd.puml`
-- Schemat architektury w katalogu `dockument`: `schematArchitektury.puml`
+- Diagram ERD w katalogu `dockument`: `erd.puml`, `erd.png`
+- Schemat architektury w katalogu `dockument`: `schematArchitektury.puml`, `schematArchitektury.png`
 
 ## Użycie
+#### Użytkownik
 1. Niezalogowany użytkownik ma dostęp tylko do strony logowania i rejestracji.
 2. Po zalogowaniu użytkownik przechodzi do strony `Habit Tracker`. Użytkownik może:
     - Dodać nowe zadanie wpisując jego nazwę w pole `Add a new task...` oraz zatwierdzając plusem
@@ -144,6 +149,35 @@
 3. Użytkownik przechodzi do strony `To Do List`, wybierając ją z pasku nawigacji. Użytkownik może:
     - Dodać nową pozycję do listy wpisując jej nazwę w pole `Add a new task...` oraz zatwierdzając plusem
     - Usunąć pozycję klikająć kosz na śmieci, który pojawia się po najechaniu na nią myszką
-    - Wyszukać pozycję po nazwie, wpisując słowa w pasek wyszukiwania
-    - Zastąpić obecną listę, wybierając plik zawierający nowe pozycje i klikając `Upload`
 4. Użytkownik wylogowuje się wybierając `Logout` z paska nawigacji
+#### Administrator
+1. Niezalogowany użytkownik ma dostęp tylko do strony logowania i rejestracji.
+2. Po zalogowaniu administrator przechodzi do strony `Users`. Widzi wszystkich użytkowników zarejestrowanych w aplikacji
+3. Administrator wylogowuje się wybierając `Logout` z paska nawigacji
+
+## Diagram ERD
+![erd](./document/erd.png)
+
+## Schemat architektury
+![scheme](./document/schematArchitektury.png)
+
+## Zrzuty ekranu
+### Rejestracja
+![register](./document/ss/register.png)  
+Ekran rejestracji pozwala użytkownikom na utworzenie nowego konta, wprowadzając podstawowe dane.
+
+### Logowanie
+![login](./document/ss/login.png)
+Ekran logowania umożliwia autoryzację użytkowników, pozwalając im na dostęp do swoich danych i funkcji aplikacji po podaniu nazwy użytkownika oraz hasła.
+
+### Śledzenie nawyków
+![tracker](./document/ss/tracker.png)  
+Widok śledzenia nawyków, gdzie użytkownik może dodawać nawyki, oznaczać wykonane dni i monitorować swoje postępy.
+
+### Lista zadań
+![list](./document/ss/list.png)  
+Ekran listy zadań, który umożliwia tworzenie i usuwanie zadań.
+
+### Lista użytkowników
+![users](./document/ss/users.png)  
+Ekran listy zadań, który umożliwia przeglądanie użytkowników.

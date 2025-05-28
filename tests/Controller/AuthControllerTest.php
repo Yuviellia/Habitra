@@ -167,4 +167,67 @@ class AuthControllerTest extends WebTestCase {
         $this->assertSame('Champ', $data['user']['surname']);
         $this->assertSame('1234567890', $data['user']['phone']);
     }
+
+    public function testGetNonAdminUsers(): void {
+        $adminDetails = new UserDetails();
+        $adminDetails->setName('Admin');
+        $adminDetails->setSurname('User');
+        $this->em->persist($adminDetails);
+
+        $admin = new User();
+        $admin->setEmail('admin@example.com');
+        $admin->setPassword($this->hasher->hashPassword($admin, 'adminpass'));
+        $admin->setRoles('ROLE_ADMIN');
+        $admin->setUserDetails($adminDetails);
+        $admin->setEnabled(true);
+        $admin->setCreatedAt(new \DateTime());
+        $this->em->persist($admin);
+
+        $userDetails = new UserDetails();
+        $userDetails->setName('Normal');
+        $userDetails->setSurname('User');
+        $this->em->persist($userDetails);
+
+        $user = new User();
+        $user->setEmail('user@example.com');
+        $user->setPassword($this->hasher->hashPassword($user, 'userpass'));
+        $user->setRoles('ROLE_USER');
+        $user->setUserDetails($userDetails);
+        $user->setEnabled(true);
+        $user->setCreatedAt(new \DateTime());
+        $this->em->persist($user);
+
+        $this->em->flush();
+
+        $this->client->loginUser($admin);
+
+        $this->client->request('GET', '/api/users');
+        $response = $this->client->getResponse();
+
+        $this->assertSame(200, $response->getStatusCode());
+
+        $data = json_decode($response->getContent(), true);
+
+        $this->assertIsArray($data, 'Response should be a JSON array');
+        $this->assertNotEmpty($data, 'At least one non‐admin must be returned');
+
+        $emails = array_map(fn($u) => $u['email'], $data);
+        $roles  = array_map(fn($u) => $u['role'],  $data);
+
+        $this->assertContains(
+            'user@example.com',
+            $emails,
+            'The non‐admin user we created must appear in the returned array'
+        );
+
+        foreach ($roles as $role) {
+            $this->assertNotSame(
+                'ROLE_ADMIN',
+                $role,
+                'No returned user may have ROLE_ADMIN'
+            );
+        }
+    }
+
+
 }
