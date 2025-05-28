@@ -17,33 +17,6 @@ class AuthController extends AbstractController {
     }
 
     #[Route('/api/login', name: 'api_login', methods: ['POST'])]
-//    #[OA\Post(
-//        path: "/api/login",
-//        summary: "Logs in the user",
-//        tags: ["Authentication"]
-//    )]
-//    #[OA\RequestBody(
-//        required: true,
-//        content: new OA\JsonContent(
-//            required: ["email", "password"],
-//            properties: [
-//                new OA\Property(property: "email", description: "User email", type: "string", example: "user@example.com"),
-//                new OA\Property(property: "password", description: "User password", type: "string", example: "mypassword")
-//            ],
-//            type: "object"
-//        )
-//    )]
-//    #[OA\Response(
-//        response: 200,
-//        description: "Login successful, returns JWT token",
-//        content: new OA\JsonContent(
-//            properties: [
-//                new OA\Property(property: "message", type: "string", example: "Login successful"),
-//                new OA\Property(property: "token", type: "string", example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
-//            ],
-//            type: "object"
-//        )
-//    )]
     #[OA\Response(
         response: 400,
         description: "Bad Request (missing email or password)",

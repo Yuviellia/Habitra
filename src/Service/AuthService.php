@@ -77,7 +77,6 @@ class AuthService {
             ];
         }
 
-        // Create new UserDetails
         $userDetails = new UserDetails();
         $userDetails->setName($data['name'])
             ->setSurname($data['surname'])
@@ -86,7 +85,6 @@ class AuthService {
         $this->entityManager->persist($userDetails);
         $this->entityManager->flush();
 
-        // Create new User
         $user = new User();
         $hashed = $this->passwordHasher->hashPassword($user, $data['password']);
         $user->setEmail($data['email'])

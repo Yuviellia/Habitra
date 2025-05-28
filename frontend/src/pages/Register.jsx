@@ -51,7 +51,6 @@ export default function Register() {
         e.preventDefault();
         setLoading(true);
 
-        // on submit, if any errors exist, do not proceed
         if (Object.keys(errors).length > 0) {
             setLoading(false);
             return;

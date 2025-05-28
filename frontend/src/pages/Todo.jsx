@@ -13,7 +13,6 @@ function Todos() {
 
     const getAuthToken = () => localStorage.getItem('token');
 
-    // Compute a single "isLoading" flag whenever any operation is in progress
     const isLoading =
         refreshing ||
         submitting ||

@@ -31,7 +31,6 @@ class AuthControllerTest extends WebTestCase {
         $conn->executeStatement($sql);
     }
 
-    // LOGIN
     public function testLoginRequiresEmailAndPassword(): void {
         $this->client->request('POST', '/api/login', [], [], ['CONTENT_TYPE' => 'application/json']
             , json_encode([]));
@@ -72,8 +71,6 @@ class AuthControllerTest extends WebTestCase {
             'CONTENT_TYPE'=>'application/json'
         ], json_encode(['email'=>'usercostam@example.com','password'=>'NIEhaslo']));
 
-        echo $this->client->getResponse()->getContent();
-
         $response = $this->client->getResponse();
         $this->assertSame(401, $response->getStatusCode());
         $data = json_decode($response->getContent(), true);
@@ -105,8 +102,6 @@ class AuthControllerTest extends WebTestCase {
         $this->assertArrayHasKey('token', $data);
     }
 
-
-    // REGISTER
     public function testRegisterMissingRequiredFields(): void {
         $this->client->request('POST', '/api/register', [], [], ['CONTENT_TYPE' => 'application/json']
             , json_encode([
@@ -228,6 +223,4 @@ class AuthControllerTest extends WebTestCase {
             );
         }
     }
-
-
 }

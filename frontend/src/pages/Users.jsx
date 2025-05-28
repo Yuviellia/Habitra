@@ -20,23 +20,19 @@ function Users() {
             },
         })
             .then(async (res) => {
-                // 1️⃣ If the HTTP status is 404, read the JSON and throw its "message"
                 if (res.status === 404) {
                     const errorJson = await res.json().catch(() => ({}));
                     throw new Error(errorJson.message || 'Nie znaleziono użytkowników');
                 }
 
-                // 2️⃣ If it’s not a “200 OK”, but some other error (401, 500, etc.), read JSON→ message
                 if (!res.ok) {
                     const errorJson = await res.json().catch(() => ({}));
                     throw new Error(errorJson.message || 'Błąd serwera');
                 }
 
-                // 3️⃣ At this point res.ok === true (status 200). The body is just an ARRAY of users:
                 return res.json();
             })
             .then((dataArray) => {
-                // `dataArray` is already an array of {id, email, role}
                 setUsers(dataArray);
             })
             .catch((e) => {
@@ -83,26 +79,6 @@ function Users() {
                 )}
             </div>
         </>
-
-        /*
-            {!notFound && todos.length > 0 && (
-                <ul className="task-list">
-                    {todos.map(todo => (
-                        <li key={todo.id} style={{marginBottom: '8px'}}>
-                        <span>{todo.task}</span>
-                                    <button
-                                        onClick={() => handleDeleteTodo(todo.id)}
-                                        disabled={deleting[todo.id]}
-                                        className="submit-button"
-                                    >
-                                        <i className="fa-solid fa-trash"></i>
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
-            </>*/
     );
 }
 

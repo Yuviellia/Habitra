@@ -142,7 +142,7 @@ class HabitService
 
         try {
             $date = new \DateTime($data['date']);
-            $date->setTime(0, 0, 0); // Ensure consistent comparison (ignore time)
+            $date->setTime(0, 0, 0);
         } catch (\Exception $e) {
             return [
                 'status' => 400,
@@ -150,7 +150,6 @@ class HabitService
             ];
         }
 
-        // Check if a Marked entry already exists for this habit + date
         $markedRepo = $this->entityManager->getRepository(Marked::class);
         $existing = $markedRepo->findOneBy([
             'tag' => $habit,
@@ -158,7 +157,6 @@ class HabitService
         ]);
 
         if ($existing) {
-            // Delete the existing mark
             $this->entityManager->remove($existing);
             $this->entityManager->flush();
 
@@ -169,7 +167,6 @@ class HabitService
             ];
         }
 
-        // Else, add new mark
         $marked = new Marked();
         $marked->setTag($habit)
             ->setDate($date);

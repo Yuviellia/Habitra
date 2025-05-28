@@ -40,7 +40,7 @@ function AppWrapper() {
                 )}
 
                 <Routes>
-                    {/* Root: redirect logged-in user to appropriate “home” */}
+                    {}
                     <Route
                         path="/"
                         element={
@@ -56,11 +56,11 @@ function AppWrapper() {
                         }
                     />
 
-                    {/* Public: login/register */}
+                    {}
                     <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
                     <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
 
-                    {/* /habits & /todo only for ROLE_USER */}
+                    {}
                     <Route
                         path="/habits"
                         element={
@@ -78,7 +78,7 @@ function AppWrapper() {
                         }
                     />
 
-                    {/* /users only for ROLE_ADMIN */}
+                    {}
                     <Route
                         path="/users"
                         element={
